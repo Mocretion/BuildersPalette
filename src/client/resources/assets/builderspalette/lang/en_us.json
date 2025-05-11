@@ -1,0 +1,48 @@
+{
+  "category.builderspalette.general": "Builders Palette",
+  "key.builderspalette.open_gui": "Open Palette List",
+
+  "container.builderspalette.palette_editor": "Palette Editor",
+  "container.builderspalette.palette_list": "Palette List",
+
+  "container.builderspalette.icon": "Drop an item here to edit palette icon",
+  "container.builderspalette.editTitle": "Click To Edit Title",
+
+  "container.builderspalette.editWeight": "Edit Weight",
+  "container.builderspalette.weightExample1": "§7Example:",
+  "container.builderspalette.weightExample2": "§7If you have the following structure:",
+
+  "container.builderspalette.weightExample3": "§6Category 1 (Weight 100)",
+  "container.builderspalette.weightExample4": "§6 - Grass Block",
+  "container.builderspalette.weightExample5": "§6 - Stone",
+  "container.builderspalette.weightExample6": "§bCategory 2 (Weight 5)",
+  "container.builderspalette.weightExample7": "§b - Diamond Block",
+
+  "container.builderspalette.weightExample8": "§7Then, for every 105 blocks placed,",
+  "container.builderspalette.weightExample9": "§7there will be an average of",
+  "container.builderspalette.weightExample10": "§7100 blocks from §6Category 1§7,",
+  "container.builderspalette.weightExample11": "§7and 5 blocks from §bCategory 2§7.",
+
+  "container.builderspalette.weightExample12": "§7Therefore, you will end up with about",
+  "container.builderspalette.weightExample13": "§650 Grass Blocks§7, §650 Stone§7,",
+  "container.builderspalette.weightExample14": "§7and §b5 Diamond Blocks§7.",
+
+  "container.builderspalette.addWeight": "Add New Weight Category",
+  "container.builderspalette.deleteWeight": "Delete (Double-Click)",
+  "container.builderspalette.addItemToWeight": "To add an item, drag and drop it here",
+
+
+  "container.builderspalette.editPalette": "Edit Palette",
+  "container.builderspalette.addPalette": "Add New Palette",
+  "container.builderspalette.deletePalette": "Delete (Double-Click)",
+  "container.builderspalette.selectHotbarSlot": "Click To Select Hotbar Slot",
+  "container.builderspalette.togglePalettes": "Toggle Functionality",
+  "container.builderspalette.deselectPalettes": "Deselect All Palettes",
+  "container.builderspalette.importPalette": "Import Palette From Clipboard",
+  "container.builderspalette.exportPalette": "Export Palette To Clipboard",
+
+  "container.builderspalette.moreDetails": "§8Press Shift for more information",
+
+  "category.builderspalette.keys": "Builders Palette",
+  "key.builderspalette.open_palettes_screen": "Toggle Palette UI"
+}
