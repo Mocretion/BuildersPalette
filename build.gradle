@@ -22,7 +22,7 @@ loom {
 	splitEnvironmentSourceSets()
 
 	mods {
-		"builderspalette" {
+		"blockpalettes" {
 			sourceSet sourceSets.main
 			sourceSet sourceSets.client
 		}

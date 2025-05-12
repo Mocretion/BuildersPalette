@@ -1,31 +1,31 @@
 {
 	"schemaVersion": 1,
-	"id": "builderspalette",
+	"id": "blockpalettes",
 	"version": "${version}",
-	"name": "BuildersPalette",
-	"description": "This is an example description! Tell everyone what your mod is about!",
+	"name": "BlockPalettes",
+	"description": "Select a previously defined block palette to automatically build with.",
 	"authors": [
-		"Me!"
+		"Mocretion"
 	],
 	"contact": {
-		"homepage": "https://fabricmc.net/",
-		"sources": "https://github.com/FabricMC/fabric-example-mod"
+		"homepage": "https://github.com/Mocretion",
+		"sources": "https://github.com/Mocretion/BlockPalettes"
 	},
-	"license": "CC0-1.0",
-	"icon": "assets/builderspalette/icon.png",
+	"license": "GNU LGPLv3",
+	"icon": "assets/blockpalettes/icon.png",
 	"environment": "*",
 	"entrypoints": {
 		"main": [
-			"com.mocretion.builderspalette.BuildersPalette"
+			"com.mocretion.blockpalettes.BlockPalettes"
 		],
 		"client": [
-			"com.mocretion.builderspalette.BuildersPaletteClient"
+			"com.mocretion.blockpalettes.BlockPalettesClient"
 		]
 	},
 	"mixins": [
-		"builderspalette.mixins.json",
+		"blockpalettes.mixins.json",
 		{
-			"config": "builderspalette.client.mixins.json",
+			"config": "blockpalettes.client.mixins.json",
 			"environment": "client"
 		}
 	],

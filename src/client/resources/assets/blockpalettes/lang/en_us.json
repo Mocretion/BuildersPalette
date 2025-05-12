@@ -1,0 +1,48 @@
+{
+  "category.blockpalettes.general": "Block Palettes",
+  "key.blockpalettes.open_gui": "Open Palette List",
+
+  "container.blockpalettes.palette_editor": "Palette Editor",
+  "container.blockpalettes.palette_list": "Palette List",
+
+  "container.blockpalettes.icon": "Drop an item here to edit palette icon",
+  "container.blockpalettes.editTitle": "Click To Edit Title",
+
+  "container.blockpalettes.editWeight": "Edit Weight",
+  "container.blockpalettes.weightExample1": "§7Example:",
+  "container.blockpalettes.weightExample2": "§7If you have the following structure:",
+
+  "container.blockpalettes.weightExample3": "§6Category 1 (Weight 100)",
+  "container.blockpalettes.weightExample4": "§6 - Grass Block",
+  "container.blockpalettes.weightExample5": "§6 - Stone",
+  "container.blockpalettes.weightExample6": "§bCategory 2 (Weight 5)",
+  "container.blockpalettes.weightExample7": "§b - Diamond Block",
+
+  "container.blockpalettes.weightExample8": "§7Then, for every 105 blocks placed,",
+  "container.blockpalettes.weightExample9": "§7there will be an average of",
+  "container.blockpalettes.weightExample10": "§7100 blocks from §6Category 1§7,",
+  "container.blockpalettes.weightExample11": "§7and 5 blocks from §bCategory 2§7.",
+
+  "container.blockpalettes.weightExample12": "§7Therefore, you will end up with about",
+  "container.blockpalettes.weightExample13": "§650 Grass Blocks§7, §650 Stone§7,",
+  "container.blockpalettes.weightExample14": "§7and §b5 Diamond Blocks§7.",
+
+  "container.blockpalettes.addWeight": "Add New Weight Category",
+  "container.blockpalettes.deleteWeight": "Delete (Double-Click)",
+  "container.blockpalettes.addItemToWeight": "To add an item, drag and drop it here",
+
+
+  "container.blockpalettes.editPalette": "Edit Palette",
+  "container.blockpalettes.addPalette": "Add New Palette",
+  "container.blockpalettes.deletePalette": "Delete (Double-Click)",
+  "container.blockpalettes.selectHotbarSlot": "Click To Select Hotbar Slot",
+  "container.blockpalettes.togglePalettes": "Toggle Functionality",
+  "container.blockpalettes.deselectPalettes": "Deselect All Palettes",
+  "container.blockpalettes.importPalette": "Import Palette From Clipboard",
+  "container.blockpalettes.exportPalette": "Export Palette To Clipboard",
+
+  "container.blockpalettes.moreDetails": "§8Press Shift for more information",
+
+  "category.blockpalettes.keys": "Block Palettes",
+  "key.blockpalettes.open_palettes_screen": "Toggle Palette UI"
+}
