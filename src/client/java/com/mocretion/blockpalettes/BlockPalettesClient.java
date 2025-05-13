@@ -5,24 +5,24 @@ import com.mocretion.blockpalettes.data.PaletteManager;
 import com.mocretion.blockpalettes.data.WeightCategory;
 import com.mocretion.blockpalettes.gui.hud.HudRenderer;
 import com.mocretion.blockpalettes.gui.screens.PaletteListScreen;
+import com.mojang.blaze3d.platform.InputConstants;
 import net.fabricmc.api.ClientModInitializer;
 
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
-import net.minecraft.block.BlockState;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.client.option.KeyBinding;
-import net.minecraft.client.util.InputUtil;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.random.Random;
-import net.minecraft.world.World;
+import net.minecraft.client.KeyMapping;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.core.BlockPos;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
 import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,11 +36,11 @@ public class BlockPalettesClient implements ClientModInitializer {
 	public static final String MOD_NAME = "BlockPalettes";
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
-	private static KeyBinding listPalettesKey;
+	private static KeyMapping listPalettesKey;
 
 	private static final List<PendingBlockCheck> pendingChecks = new ArrayList<>();
 
-	public static final Random random = Random.create();
+	public static final RandomSource random = RandomSource.create();
 
 	@Override
 	public void onInitializeClient() {
@@ -56,9 +56,9 @@ public class BlockPalettesClient implements ClientModInitializer {
 	private void registerKeyBidnings(){
 
 		if (listPalettesKey == null) {
-			listPalettesKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+			listPalettesKey = KeyBindingHelper.registerKeyBinding(new KeyMapping(
 					"key.blockpalettes.open_palettes_screen",
-					InputUtil.Type.KEYSYM,
+					InputConstants.Type.KEYSYM,
 					GLFW.GLFW_KEY_B, // B to open palettes
 					"category.blockpalettes.keys"
 			));
@@ -67,7 +67,7 @@ public class BlockPalettesClient implements ClientModInitializer {
 		// This will be executed on the client initialization
 		ClientTickEvents.END_CLIENT_TICK.register(client -> {
 			// Check if the key was pressed this tick
-			while (listPalettesKey.wasPressed()) {
+			while (listPalettesKey.consumeClick()) {
 
 				PaletteManager.initBySaveFile();
 				openPaletteListScreen(client);
@@ -75,15 +75,21 @@ public class BlockPalettesClient implements ClientModInitializer {
 		});
 
 		UseBlockCallback.EVENT.register((player, world, hand, hitResult) ->{
-			if(world.isClient() && player instanceof ClientPlayerEntity){
-				BlockPos blockPos = hitResult.getBlockPos().offset(hitResult.getSide());
+			if(world.isClientSide() && player instanceof LocalPlayer){
 
+				BlockPos blockPos = hitResult.getBlockPos();
 				BlockState state = world.getBlockState(blockPos);
 
-				pendingChecks.add(new PendingBlockCheck(world, player, blockPos, state));
+				if(state.canBeReplaced()){  // Block was placed in snow, grass, fern, etc
+					pendingChecks.add(new PendingBlockCheck(world, player, blockPos, state));
+				}else{  // Block was placed next to block the player was looking at
+					BlockPos blockPosSideBlock = hitResult.getBlockPos().relative(hitResult.getDirection());
+					BlockState stateSideBlock = world.getBlockState(blockPosSideBlock);
 
+					pendingChecks.add(new PendingBlockCheck(world, player, blockPosSideBlock, stateSideBlock));
+				}
 			}
-            return ActionResult.PASS;
+            return InteractionResult.PASS;
         });
 
 		ClientTickEvents.END_CLIENT_TICK.register(server -> {
@@ -92,7 +98,7 @@ public class BlockPalettesClient implements ClientModInitializer {
 
 				while (iterator.hasNext()) {
 					PendingBlockCheck check = iterator.next();
-					World world = check.world;
+					Level world = check.world;
 					if(world == null){
 						iterator.remove();
 						continue;
@@ -116,28 +122,28 @@ public class BlockPalettesClient implements ClientModInitializer {
 		HudRenderCallback.EVENT.register(new HudRenderer()::renderHudAdditions);
 	}
 
-	private void onBlockPlaced(PlayerEntity player) {
+	private void onBlockPlaced(Player player) {
 
 		if(!PaletteManager.getIsEnabled())
 			return;
 
-		if(!PaletteManager.getSelectedPalettes().containsKey(player.getInventory().selectedSlot + 1))
+		if(!PaletteManager.getSelectedPalettes().containsKey(player.getInventory().selected + 1))
 			return;
 
-		PaletteManager.getSelectedPalettes().get(player.getInventory().selectedSlot + 1).getPaletteItemFromInventory(player);
+		PaletteManager.getSelectedPalettes().get(player.getInventory().selected + 1).getPaletteItemFromInventory(player);
 	}
 
-	private void openPaletteListScreen(MinecraftClient client) {
+	private void openPaletteListScreen(Minecraft client) {
 		client.setScreen(new PaletteListScreen(client));
 	}
 
 	private static class PendingBlockCheck{
-		final World world;
-		final PlayerEntity player;
+		final Level world;
+		final Player player;
 		final BlockPos pos;
 		final BlockState originalState;
 
-		PendingBlockCheck(World world, PlayerEntity player, BlockPos pos, BlockState originalState) {
+		PendingBlockCheck(Level world, Player player, BlockPos pos, BlockState originalState) {
 			this.world = world;
 			this.player = player;
 			this.pos = pos;

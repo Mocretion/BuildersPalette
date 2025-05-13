@@ -5,13 +5,13 @@ import com.mocretion.blockpalettes.data.PaletteManager;
 import com.mocretion.blockpalettes.gui.ButtonCatalogue;
 import com.mocretion.blockpalettes.gui.ButtonInfo;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.render.RenderTickCounter;
+import net.minecraft.client.DeltaTracker;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 
 public class HudRenderer {
 
-    private static final MinecraftClient client = MinecraftClient.getInstance();
+    private static final Minecraft client = Minecraft.getInstance();
 
     private static final int HOTBARR_WIDTH = 178;
     private static final int HOOTBAR_HEIGHT = 20;
@@ -19,13 +19,13 @@ public class HudRenderer {
     private static final int OVERLAY_HEIGHT = 18;
     private static final int OVERLAY_Width = 18;
 
-    public void renderHudAdditions(DrawContext context, RenderTickCounter renderTickCounter) {
+    public void renderHudAdditions(GuiGraphics context, DeltaTracker renderTickCounter) {
 
-        if(!PaletteManager.getIsEnabled() || PaletteManager.getSelectedPalettes().isEmpty())
+        if(client.options.hideGui || !PaletteManager.getIsEnabled() || PaletteManager.getSelectedPalettes().isEmpty())
             return;
 
-        int screenWidth  = client.getWindow().getScaledWidth();
-        int screenHeight = client.getWindow().getScaledHeight();
+        int screenWidth  = client.getWindow().getGuiScaledWidth();
+        int screenHeight = client.getWindow().getGuiScaledHeight();
 
         int x = (screenWidth - HOTBARR_WIDTH) / 2;
         int y = screenHeight - HOOTBAR_HEIGHT;
@@ -35,7 +35,7 @@ public class HudRenderer {
 
         for(int enabledSlot : PaletteManager.getSelectedPalettes().keySet()){
             ButtonInfo hudElement = ButtonCatalogue.getHotbarActivePalette(enabledSlot -1);
-            context.drawTexture(hudElement.identifier, x + 20 * (enabledSlot - 1), y, hudElement.u, hudElement.v, OVERLAY_Width, OVERLAY_HEIGHT);
+            context.blit(hudElement.identifier, x + 20 * (enabledSlot - 1), y, hudElement.u, hudElement.v, OVERLAY_Width, OVERLAY_HEIGHT);
         }
 
         RenderSystem.disableBlend();

@@ -1,56 +1,57 @@
 package com.mocretion.blockpalettes.gui.draw;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.render.DiffuseLighting;
-import net.minecraft.client.render.OverlayTexture;
-import net.minecraft.client.render.model.BakedModel;
-import net.minecraft.client.render.model.json.ModelTransformationMode;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.crash.CrashException;
-import net.minecraft.util.crash.CrashReport;
-import net.minecraft.util.crash.CrashReportSection;
+
+import com.mojang.blaze3d.platform.Lighting;
+import net.minecraft.CrashReport;
+import net.minecraft.CrashReportCategory;
+import net.minecraft.ReportedException;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.client.resources.model.BakedModel;
+import net.minecraft.world.item.ItemDisplayContext;
+import net.minecraft.world.item.ItemStack;
 
 public class CustomDrawContext {
 
-    private final DrawContext context;
-    private final MinecraftClient client;
+    private final GuiGraphics context;
+    private final Minecraft client;
 
-    public CustomDrawContext(MinecraftClient client, DrawContext context) {
+    public CustomDrawContext(Minecraft client, GuiGraphics context) {
         this.client = client;
         this.context = context;
     }
 
     public void drawItem(ItemStack stack, int x, int y, float scale){
         if (!stack.isEmpty()) {
-            BakedModel bakedModel = this.client.getItemRenderer().getModel(stack, this.client.world, this.client.player, 0);
-            context.getMatrices().push();
-            context.getMatrices().translate((float)(x + 8), (float)(y + 8), (float)(150));
+            BakedModel bakedModel = this.client.getItemRenderer().getModel(stack, this.client.level, this.client.player, 0);
+            context.pose().pushPose();
+            context.pose().translate((float)(x + 8), (float)(y + 8), (float)(150));
 
             try {
-                context.getMatrices().scale(scale, -scale, scale);
-                boolean bl = !bakedModel.isSideLit();
+                context.pose().scale(scale, -scale, scale);
+                boolean bl = !bakedModel.usesBlockLight();
                 if (bl) {
-                    DiffuseLighting.disableGuiDepthLighting();
+                    Lighting.setupForFlatItems();
                 }
 
                 this.client
                         .getItemRenderer()
-                        .renderItem(stack, ModelTransformationMode.GUI, false, context.getMatrices(), context.getVertexConsumers(), 15728880, OverlayTexture.DEFAULT_UV, bakedModel);
-                context.draw();
+                        .render(stack, ItemDisplayContext.GUI, false, context.pose(), context.bufferSource(), 15728880, OverlayTexture.NO_OVERLAY, bakedModel);
+                context.flush();
                 if (bl) {
-                    DiffuseLighting.enableGuiDepthLighting();
+                    Lighting.setupFor3DItems();
                 }
             } catch (Throwable var12) {
-                CrashReport crashReport = CrashReport.create(var12, "Rendering item");
-                CrashReportSection crashReportSection = crashReport.addElement("Item being rendered");
-                crashReportSection.add("Item Type", () -> String.valueOf(stack.getItem()));
-                crashReportSection.add("Item Components", () -> String.valueOf(stack.getComponents()));
-                crashReportSection.add("Item Foil", () -> String.valueOf(stack.hasGlint()));
-                throw new CrashException(crashReport);
+                CrashReport crashReport = CrashReport.forThrowable(var12, "Rendering item");
+                CrashReportCategory crashReportSection = crashReport.addCategory("Item being rendered");
+                crashReportSection.setDetail("Item Type", () -> String.valueOf(stack.getItem()));
+                crashReportSection.setDetail("Item Components", () -> String.valueOf(stack.getComponents()));
+                crashReportSection.setDetail("Item Foil", () -> String.valueOf(stack.hasFoil()));
+                throw new ReportedException(crashReport);
             }
 
-            context.getMatrices().pop();
+            context.pose().popPose();
         }
     }
 }
