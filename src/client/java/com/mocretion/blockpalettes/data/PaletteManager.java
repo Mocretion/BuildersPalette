@@ -5,7 +5,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.mocretion.blockpalettes.data.helper.JsonHelper;
 import com.mocretion.blockpalettes.data.helper.SaveHelper;
-import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.Minecraft;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
@@ -97,10 +97,10 @@ public class PaletteManager {
 
     public static void importPalette(){
 
-        MinecraftClient client = MinecraftClient.getInstance();
+        Minecraft client = Minecraft.getInstance();
 
         if (client.getWindow() != null) {
-            long window = client.getWindow().getHandle();
+            long window = client.getWindow().getWindow();
             String clipboardContent = GLFW.glfwGetClipboardString(window);
             if(clipboardContent == null)
                 return;

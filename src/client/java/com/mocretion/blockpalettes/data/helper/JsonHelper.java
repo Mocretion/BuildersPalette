@@ -4,11 +4,10 @@ import com.google.gson.*;
 import com.mocretion.blockpalettes.BlockPalettesClient;
 import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.JsonOps;
-import net.minecraft.client.MinecraftClient;
-
-import net.minecraft.item.ItemStack;
-import net.minecraft.registry.DynamicRegistryManager;
-import net.minecraft.registry.RegistryOps;
+import net.minecraft.client.Minecraft;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.resources.RegistryOps;
+import net.minecraft.world.item.ItemStack;
 
 import java.util.Optional;
 
@@ -44,9 +43,9 @@ public class JsonHelper {
 
     public static JsonElement itemStackToJsonObject(ItemStack stack) {
 
-        DynamicRegistryManager registryManager = getRegistryManager();
+        RegistryAccess registryManager = getRegistryManager();
 
-        RegistryOps<JsonElement> registryOps = RegistryOps.of(JsonOps.INSTANCE, registryManager);
+        RegistryOps<JsonElement> registryOps = RegistryOps.create(JsonOps.INSTANCE, registryManager);
 
         Optional<JsonElement> result = ItemStack.CODEC
                 .encodeStart(registryOps, stack)
@@ -64,9 +63,9 @@ public class JsonHelper {
 
     public static ItemStack jsonToItemStack(JsonElement jsonItemStack) {
 
-        DynamicRegistryManager registryManager = getRegistryManager();
+        RegistryAccess registryManager = getRegistryManager();
 
-        RegistryOps<JsonElement> registryOps = RegistryOps.of(JsonOps.INSTANCE, registryManager);
+        RegistryOps<JsonElement> registryOps = RegistryOps.create(JsonOps.INSTANCE, registryManager);
 
         Optional<Pair<ItemStack, JsonElement>> result = ItemStack.CODEC
                 .decode(registryOps, jsonItemStack)
@@ -85,9 +84,9 @@ public class JsonHelper {
     /**
      * Clientside only!!
      */
-    private static DynamicRegistryManager getRegistryManager() {
-        if (MinecraftClient.getInstance() != null && MinecraftClient.getInstance().world != null) {
-            return MinecraftClient.getInstance().world.getRegistryManager();
+    private static RegistryAccess getRegistryManager() {
+        if (Minecraft.getInstance() != null && Minecraft.getInstance().level != null) {
+            return Minecraft.getInstance().level.registryAccess();
         }
 
         throw new IllegalStateException("Unable to access registry manager. Make sure this code is running in a world context.");

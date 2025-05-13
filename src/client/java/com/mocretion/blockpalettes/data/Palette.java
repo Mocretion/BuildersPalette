@@ -6,16 +6,16 @@ import com.google.gson.JsonObject;
 import com.mocretion.blockpalettes.BlockPalettesClient;
 import com.mocretion.blockpalettes.data.helper.JsonHelper;
 import com.mocretion.blockpalettes.data.helper.SaveHelper;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.network.packet.c2s.play.CreativeInventoryActionC2SPacket;
-import net.minecraft.screen.ScreenHandler;
-import net.minecraft.screen.slot.SlotActionType;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.network.protocol.game.ServerboundSetCreativeModeSlotPacket;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
@@ -50,9 +50,9 @@ public class Palette {
         return name;
     }
 
-    public String getShortenedName(TextRenderer renderer, int maxWidth){
-        if(renderer.getWidth(getName()) > maxWidth){
-            String trimmed = renderer.trimToWidth(getName(), maxWidth);
+    public String getShortenedName(Font renderer, int maxWidth){
+        if(renderer.width(getName()) > maxWidth){
+            String trimmed = renderer.plainSubstrByWidth(getName(), maxWidth);
             trimmed = trimmed.substring(0, trimmed.length() - 4) + "...";
             return trimmed;
         }
@@ -115,7 +115,7 @@ public class Palette {
         }
     }
 
-    public void getPaletteItemFromInventory(PlayerEntity player){
+    public void getPaletteItemFromInventory(Player player){
 
         int hotbarSlot = this.hotbarSlot;  // Arrays start at 0, hotbarSlot at 1.
         hotbarSlot--;
@@ -128,7 +128,7 @@ public class Palette {
         if(totalWeight == 0)
             return;
 
-        int randomWeight = BlockPalettesClient.random.nextBetween(1, totalWeight);
+        int randomWeight = BlockPalettesClient.random.nextIntBetweenInclusive(1, totalWeight);
         totalWeight = 0;
         WeightCategory selectedWeightCat = null;
         for(WeightCategory cat : getWeights()){
@@ -146,25 +146,25 @@ public class Palette {
         if(selectedWeightCat.getItems().isEmpty())
             return;
 
-        int randomBlock = BlockPalettesClient.random.nextBetween(0, selectedWeightCat.getItems().size() - 1);
+        int randomBlock = BlockPalettesClient.random.nextIntBetweenInclusive(0, selectedWeightCat.getItems().size() - 1);
         ItemStack randomStack = selectedWeightCat.getItems().get(randomBlock);
 
-        PlayerInventory playerInv = player.getInventory();
-        ScreenHandler screenHandler = player.playerScreenHandler;
+        Inventory playerInv = player.getInventory();
+        AbstractContainerMenu screenHandler = player.containerMenu;
 
-        if(player.getAbilities().creativeMode){
-            CreativeInventoryActionC2SPacket packet =
-                    new CreativeInventoryActionC2SPacket(hotbarSlot + 36, randomStack);
-            ((ClientPlayerEntity)player).networkHandler.sendPacket(packet);
+        if(player.getAbilities().instabuild){
+            ServerboundSetCreativeModeSlotPacket packet =
+                    new ServerboundSetCreativeModeSlotPacket(hotbarSlot + 36, randomStack);
+            ((LocalPlayer)player).connection.send(packet);
         }else {
 
-            for (int i = 0; i < playerInv.main.size(); i++) {
+            for (int i = 0; i < playerInv.items.size(); i++) {
 
                 int slot = i < 9 ? i + 36 : i;
-                ItemStack playerStack = playerInv.main.get(i);
+                ItemStack playerStack = playerInv.items.get(i);
 
-                if (ItemStack.areItemsAndComponentsEqual(playerStack, randomStack)) {
-                    MinecraftClient.getInstance().interactionManager.clickSlot(screenHandler.syncId, slot, hotbarSlot, SlotActionType.SWAP, player);
+                if (ItemStack.isSameItemSameComponents(playerStack, randomStack)) {
+                    Minecraft.getInstance().gameMode.handleInventoryMouseClick(screenHandler.containerId, slot, hotbarSlot, ClickType.SWAP, player);
                     break;
                 }
             }
@@ -172,9 +172,9 @@ public class Palette {
     }
 
     public void exportToClipboard(){
-        MinecraftClient client = MinecraftClient.getInstance();
+        Minecraft client = Minecraft.getInstance();
         if (client.getWindow() != null) {
-            long window = client.getWindow().getHandle();
+            long window = client.getWindow().getWindow();
             GLFW.glfwSetClipboardString(window, JsonHelper.jsonToString(toJson(), true));
         }
     }

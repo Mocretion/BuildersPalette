@@ -20,22 +20,17 @@
 		],
 		"client": [
 			"com.mocretion.blockpalettes.BlockPalettesClient"
+		],
+		"jei_mod_plugin": [
+			"com.mocretion.blockpalettes.plugins.jei.JustEnoughItemsClient"
 		]
 	},
 	"mixins": [
-		"blockpalettes.mixins.json",
-		{
-			"config": "blockpalettes.client.mixins.json",
-			"environment": "client"
-		}
 	],
 	"depends": {
 		"fabricloader": ">=0.16.14",
 		"minecraft": "~1.21.1",
 		"java": ">=21",
 		"fabric-api": "*"
-	},
-	"suggests": {
-		"another-mod": "*"
 	}
 }

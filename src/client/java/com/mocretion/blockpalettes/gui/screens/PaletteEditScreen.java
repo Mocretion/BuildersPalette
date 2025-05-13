@@ -6,29 +6,49 @@ import com.mocretion.blockpalettes.data.WeightCategory;
 import com.mocretion.blockpalettes.data.helper.SaveHelper;
 import com.mocretion.blockpalettes.gui.ButtonCatalogue;
 import com.mocretion.blockpalettes.gui.ButtonInfo;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.text.OrderedText;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
+import com.mocretion.blockpalettes.plugins.jei.EmptyContainerMenu;
+import mezz.jei.api.gui.handlers.IGhostIngredientHandler;
+import mezz.jei.api.gui.handlers.IGuiContainerHandler;
+import mezz.jei.api.ingredients.ITypedIngredient;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.ComponentPath;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.ChatComponent;
+import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.gui.navigation.FocusNavigationEvent;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.gui.screens.inventory.ContainerScreen;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.FormattedCharSequence;
+import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ChestMenu;
+import net.minecraft.world.inventory.InventoryMenu;
+import net.minecraft.world.inventory.MenuType;
+import net.minecraft.world.item.ItemStack;
+import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
-public class PaletteEditScreen extends Screen {
-    private static final Identifier BG_TEXTURE = Identifier.of(BlockPalettesClient.MOD_ID, "textures/gui/palette_view.png");
-    private static final Identifier ADD_WEIGHT_TEXTURE = Identifier.of(BlockPalettesClient.MOD_ID, "textures/gui/add_row.png");
-    private static final Identifier INVENTORY_ROW_TEXTURE = Identifier.of(BlockPalettesClient.MOD_ID, "textures/gui/inventory_row.png");
-    private static final Identifier TEXT_ROW_TEXTURE = Identifier.of(BlockPalettesClient.MOD_ID, "textures/gui/text_row.png");
-    private static final Identifier SCROLLER_TEXTURE = Identifier.of(BlockPalettesClient.MOD_ID, "textures/gui/scroller.png");
+public class PaletteEditScreen extends AbstractContainerScreen<EmptyContainerMenu> {
+    private static final ResourceLocation BG_TEXTURE = ResourceLocation.fromNamespaceAndPath(BlockPalettesClient.MOD_ID, "textures/gui/palette_view.png");
+    private static final ResourceLocation ADD_WEIGHT_TEXTURE = ResourceLocation.fromNamespaceAndPath(BlockPalettesClient.MOD_ID, "textures/gui/add_row.png");
+    private static final ResourceLocation INVENTORY_ROW_TEXTURE = ResourceLocation.fromNamespaceAndPath(BlockPalettesClient.MOD_ID, "textures/gui/inventory_row.png");
+    private static final ResourceLocation TEXT_ROW_TEXTURE = ResourceLocation.fromNamespaceAndPath(BlockPalettesClient.MOD_ID, "textures/gui/text_row.png");
+    private static final ResourceLocation SCROLLER_TEXTURE = ResourceLocation.fromNamespaceAndPath(BlockPalettesClient.MOD_ID, "textures/gui/scroller.png");
 
     private static final int MAX_WEIGHT_LENGTH = 5;
     private static final int MAX_TITLE_LENGTH = 21;
 
-    private final PlayerEntity player;
+    private final Player player;
     private final Palette palette;
 
     // GUI dimensions
@@ -88,8 +108,8 @@ public class PaletteEditScreen extends Screen {
     private byte deleteConfirm;
     private int toBeDeletedId;
 
-    public PaletteEditScreen(PlayerEntity player, Palette palette) {
-        super(Text.literal(palette.getName()));
+    public PaletteEditScreen(Player player, Palette palette) {
+        super(new EmptyContainerMenu(), new Inventory(player), Component.translatable("container.blockpalettes.editTitle"));
         this.player = player;
         this.palette = palette;
         this.selectedInputBlink = 0;
@@ -105,18 +125,25 @@ public class PaletteEditScreen extends Screen {
     }
 
     @Override
-    public void renderBackground(DrawContext context, int mouseX, int mouseY, float delta){
+    public void renderBackground(GuiGraphics context, int mouseX, int mouseY, float delta){
 
         super.renderBackground(context, mouseX, mouseY, delta);
 
         // Draw background
-        context.drawTexture(BG_TEXTURE, leftPos, topPos, 0, 0, backgroundWidth, backgroundHeight);
+        context.blit(BG_TEXTURE, leftPos, topPos, 0, 0, backgroundWidth, backgroundHeight);
     }
 
     @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+    protected void renderBg(GuiGraphics guiGraphics, float f, int i, int j) {
 
-        super.render(context, mouseX, mouseY, delta);
+    }
+
+    @Override
+    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
+
+        //super.render(context, mouseX, mouseY, delta);
+
+        renderBackground(context, mouseX, mouseY, delta);
 
         // Draw title
         String titleText = palette.getName();
@@ -128,12 +155,12 @@ public class PaletteEditScreen extends Screen {
             }
         }
 
-        context.drawText(this.textRenderer, titleText,
+        context.drawString(this.font, titleText,
                 leftPos + titleInputMarginX,
                 topPos + titleInputMarginY, this.markedEntireInput && this.selectedInput == -1 ? 0x539de6 : 0xffffff, true);
 
         if(isPointInRegion(leftPos + titleInputMarginX, topPos + titleInputMarginY, titleInputWidth, titleInputHeight, (int) mouseX, (int) mouseY)) {
-            context.drawTooltip(this.textRenderer, Text.translatable("container.blockpalettes.editTitle"), mouseX, mouseY);
+            context.renderComponentTooltip(this.font, Component.translatable("container.blockpalettes.editTitle").toFlatList(), mouseX, mouseY);
         }
 
         // Draw Upper Inventory
@@ -142,21 +169,21 @@ public class PaletteEditScreen extends Screen {
         // Draw icon
         if(isPointInRegion(leftPos + iconMarginX, topPos + iconMarginY, itemSlotSize, itemSlotSize, (int) mouseX, (int) mouseY)) {
             context.fill(leftPos + iconMarginX, topPos + iconMarginY, leftPos + iconMarginX + 16, topPos + iconMarginY + 16, 0x80FFFFFF);
-            context.drawTooltip(this.textRenderer, Text.translatable("container.blockpalettes.icon"), mouseX, mouseY);
+            context.renderComponentTooltip(this.font, Component.translatable("container.blockpalettes.icon").toFlatList(), mouseX, mouseY);
         }
-        context.drawItem(palette.getIcon(), leftPos + iconMarginX, topPos + iconMarginY);
+        context.renderItem(palette.getIcon(), leftPos + iconMarginX, topPos + iconMarginY);
 
         // Draw export hover
         if(isPointInRegion(leftPos + exportButtonMarginX, topPos + exportButtonMarginY, ButtonCatalogue.smallButtonSize, ButtonCatalogue.smallButtonSize, (int)mouseX, (int)mouseY)) {
             ButtonInfo texture = ButtonCatalogue.getExportHover();
-            context.drawTexture(texture.identifier, leftPos + exportButtonMarginX, topPos + exportButtonMarginY, texture.u, texture.v, buttonSize, buttonSize);
-            context.drawTooltip(this.textRenderer, Text.translatable("container.blockpalettes.exportPalette"), mouseX, mouseY);
+            context.blit(texture.identifier, leftPos + exportButtonMarginX, topPos + exportButtonMarginY, texture.u, texture.v, buttonSize, buttonSize);
+            context.renderComponentTooltip(this.font, Component.translatable("container.blockpalettes.exportPalette").toFlatList(), mouseX, mouseY);
         }
 
         final int scrollLevel = (int)scrollPosition;
 
         // Draw scroller
-        context.drawTexture(SCROLLER_TEXTURE, leftPos + scrollMarginX, getCurrentScrollerYPosition(), 0, 0, scrollerWidth, scrollerHeight);
+        context.blit(SCROLLER_TEXTURE, leftPos + scrollMarginX, getCurrentScrollerYPosition(), 0, 0, scrollerWidth, scrollerHeight);
 
         int xPos = leftPos + weightContainerStartWidth;
         boolean addedAddBtn = false;
@@ -167,17 +194,17 @@ public class PaletteEditScreen extends Screen {
 
             if(rowInfo.isBlank() && !addedAddBtn){  // Add new element
 
-                context.drawTexture(ADD_WEIGHT_TEXTURE, xPos, yPos, 0, 0, weightItemsWidth, weightItemsHeight);
+                context.blit(ADD_WEIGHT_TEXTURE, xPos, yPos, 0, 0, weightItemsWidth, weightItemsHeight);
 
                 if(isPointInRegion(xPos, yPos, weightItemsWidth, weightItemsHeight, (int) mouseX, (int) mouseY)) {
-                    context.drawTooltip(this.textRenderer, Text.translatable("container.blockpalettes.addWeight"), mouseX, mouseY);
+                    context.renderComponentTooltip(this.font, Component.translatable("container.blockpalettes.addWeight").toFlatList(), mouseX, mouseY);
                 }
 
                 addedAddBtn = true;
 
             }else if(rowInfo.isWeightRow()){  // Add weight header
 
-                context.drawTexture(TEXT_ROW_TEXTURE, xPos, yPos, 0, 0, weightItemsWidth, weightItemsHeight);
+                context.blit(TEXT_ROW_TEXTURE, xPos, yPos, 0, 0, weightItemsWidth, weightItemsHeight);
 
                 String weightText = weights.get(rowInfo.weightCategoryId).getWeightInputField();
 
@@ -189,66 +216,66 @@ public class PaletteEditScreen extends Screen {
                     }
                 }
 
-                context.drawText(this.textRenderer, weightText,
+                context.drawString(this.font, weightText,
                         xPos + weightTextInputMarginX,
                         yPos + weightTextInputMarginY,
                         this.markedEntireInput && this.selectedInput == rowInfo.weightCategoryId ? 0x539de6 : 0xffffff, true);
 
                 if(isPointInRegion(xPos + weightTextInputMarginX, yPos + weightTextInputMarginY, weightTextInputWidth, weightTextInputHeight, (int) mouseX, (int) mouseY)) {
-                    List<OrderedText> weightEditTooltip = new ArrayList<>();
-                    weightEditTooltip.add(Text.translatable("container.blockpalettes.editWeight").asOrderedText());
-                    weightEditTooltip.add(Text.empty().asOrderedText());
+                    List<FormattedCharSequence> weightEditTooltip = new ArrayList<>();
+                    weightEditTooltip.add(Component.translatable("container.blockpalettes.editWeight").getVisualOrderText());
+                    weightEditTooltip.add(Component.empty().getVisualOrderText());
 
                     if(isKeyDown(GLFW.GLFW_KEY_LEFT_SHIFT)){
-                        weightEditTooltip.add(Text.translatable("container.blockpalettes.weightExample1").asOrderedText());
-                        weightEditTooltip.add(Text.translatable("container.blockpalettes.weightExample2").asOrderedText());
-                        weightEditTooltip.add(Text.empty().asOrderedText());
+                        weightEditTooltip.add(Component.translatable("container.blockpalettes.weightExample1").getVisualOrderText());
+                        weightEditTooltip.add(Component.translatable("container.blockpalettes.weightExample2").getVisualOrderText());
+                        weightEditTooltip.add(Component.empty().getVisualOrderText());
 
-                        weightEditTooltip.add(Text.translatable("container.blockpalettes.weightExample3").asOrderedText());
-                        weightEditTooltip.add(Text.translatable("container.blockpalettes.weightExample4").asOrderedText());
-                        weightEditTooltip.add(Text.translatable("container.blockpalettes.weightExample5").asOrderedText());
-                        weightEditTooltip.add(Text.translatable("container.blockpalettes.weightExample6").asOrderedText());
-                        weightEditTooltip.add(Text.translatable("container.blockpalettes.weightExample7").asOrderedText());
-                        weightEditTooltip.add(Text.empty().asOrderedText());
+                        weightEditTooltip.add(Component.translatable("container.blockpalettes.weightExample3").getVisualOrderText());
+                        weightEditTooltip.add(Component.translatable("container.blockpalettes.weightExample4").getVisualOrderText());
+                        weightEditTooltip.add(Component.translatable("container.blockpalettes.weightExample5").getVisualOrderText());
+                        weightEditTooltip.add(Component.translatable("container.blockpalettes.weightExample6").getVisualOrderText());
+                        weightEditTooltip.add(Component.translatable("container.blockpalettes.weightExample7").getVisualOrderText());
+                        weightEditTooltip.add(Component.empty().getVisualOrderText());
 
-                        weightEditTooltip.add(Text.translatable("container.blockpalettes.weightExample8").asOrderedText());
-                        weightEditTooltip.add(Text.translatable("container.blockpalettes.weightExample9").asOrderedText());
-                        weightEditTooltip.add(Text.translatable("container.blockpalettes.weightExample10").asOrderedText());
-                        weightEditTooltip.add(Text.translatable("container.blockpalettes.weightExample11").asOrderedText());
-                        weightEditTooltip.add(Text.empty().asOrderedText());
+                        weightEditTooltip.add(Component.translatable("container.blockpalettes.weightExample8").getVisualOrderText());
+                        weightEditTooltip.add(Component.translatable("container.blockpalettes.weightExample9").getVisualOrderText());
+                        weightEditTooltip.add(Component.translatable("container.blockpalettes.weightExample10").getVisualOrderText());
+                        weightEditTooltip.add(Component.translatable("container.blockpalettes.weightExample11").getVisualOrderText());
+                        weightEditTooltip.add(Component.empty().getVisualOrderText());
 
-                        weightEditTooltip.add(Text.translatable("container.blockpalettes.weightExample12").asOrderedText());
-                        weightEditTooltip.add(Text.translatable("container.blockpalettes.weightExample13").asOrderedText());
-                        weightEditTooltip.add(Text.translatable("container.blockpalettes.weightExample14").asOrderedText());
+                        weightEditTooltip.add(Component.translatable("container.blockpalettes.weightExample12").getVisualOrderText());
+                        weightEditTooltip.add(Component.translatable("container.blockpalettes.weightExample13").getVisualOrderText());
+                        weightEditTooltip.add(Component.translatable("container.blockpalettes.weightExample14").getVisualOrderText());
                     }else{
-                        weightEditTooltip.add(Text.translatable("container.blockpalettes.moreDetails").asOrderedText());
+                        weightEditTooltip.add(Component.translatable("container.blockpalettes.moreDetails").getVisualOrderText());
                     }
 
-                    context.drawOrderedTooltip(this.textRenderer, weightEditTooltip, mouseX, mouseY);
+                    context.renderTooltip(this.font, weightEditTooltip, mouseX, mouseY);
                 }
 
                 // Is hovering over delete
                 if(isPointInRegion(xPos + deleteButtonMarginX, yPos + deleteButtonMarginY, buttonSize, buttonSize, (int) mouseX, (int) mouseY)) {
                     ButtonInfo texture = ButtonCatalogue.getDeleteHover();
-                    context.drawTexture(texture.identifier, xPos + deleteButtonMarginX, yPos + deleteButtonMarginY, texture.u, texture.v, buttonSize, buttonSize);
-                    context.drawTooltip(this.textRenderer, Text.translatable("container.blockpalettes.deleteWeight"), mouseX, mouseY);
+                    context.blit(texture.identifier, xPos + deleteButtonMarginX, yPos + deleteButtonMarginY, texture.u, texture.v, buttonSize, buttonSize);
+                    context.renderComponentTooltip(this.font, Component.translatable("container.blockpalettes.deleteWeight").toFlatList(), mouseX, mouseY);
                 }
 
                 // Is selected as delete
                 if(this.deleteConfirm > 0 && this.toBeDeletedId == rowInfo.weightCategoryId){
                     ButtonInfo texture = ButtonCatalogue.getDeleteConfirm();
-                    context.drawTexture(texture.identifier, xPos + deleteButtonMarginX, yPos + deleteButtonMarginY, texture.u, texture.v, buttonSize, buttonSize);
+                    context.blit(texture.identifier, xPos + deleteButtonMarginX, yPos + deleteButtonMarginY, texture.u, texture.v, buttonSize, buttonSize);
                 }
 
                 }else if(!rowInfo.isBlank()){  // Add inventory
 
-                context.drawTexture(INVENTORY_ROW_TEXTURE, xPos, yPos, 0, 0, weightItemsWidth, weightItemsHeight);
+                context.blit(INVENTORY_ROW_TEXTURE, xPos, yPos, 0, 0, weightItemsWidth, weightItemsHeight);
 
                 // Draw items
                 for (int itemNo = 0; itemNo < rowInfo.items.size(); itemNo++) {
 
                     ItemStack item = rowInfo.items.get(itemNo);
-                    context.drawItem(item, xPos + itemNo * itemSlotSize + 1, yPos + 1);
+                    context.renderItem(item, xPos + itemNo * itemSlotSize + 1, yPos + 1);
                 }
 
                 // Draw tooltip and hover effect
@@ -263,10 +290,10 @@ public class PaletteEditScreen extends Screen {
 
                             // Item info tooltip
                             if (!hoveredItem.isEmpty()) {
-                                context.drawTooltip(this.textRenderer, getTooltipFromItem(this.client, hoveredItem), mouseX, mouseY);
+                                context.renderComponentTooltip(this.font, getTooltipFromItem(this.minecraft, hoveredItem), mouseX, mouseY);
                             }
                         }else{  // How 2 add tolltip
-                            context.drawTooltip(this.textRenderer, Text.translatable("container.blockpalettes.addItemToWeight"), mouseX, mouseY);
+                            context.renderComponentTooltip(this.font, Component.translatable("container.blockpalettes.addItemToWeight").toFlatList(), mouseX, mouseY);
                         }
                     }
                 }
@@ -296,10 +323,10 @@ public class PaletteEditScreen extends Screen {
                 int slotY = topPos + playerInvStartHeight + row * itemSlotSize;
 
                 // Draw the slot content
-                ItemStack stack = player.getInventory().getStack(slotIndex);
+                ItemStack stack = player.getInventory().getItem(slotIndex);
                 if (!stack.isEmpty()) {
-                    context.drawItem(stack, slotX, slotY);
-                    context.drawItemInSlot(this.textRenderer, stack, slotX, slotY);
+                    context.renderItem(stack, slotX, slotY);
+                    context.renderItemDecorations(this.font, stack, slotX, slotY);
                 }
             }
         }
@@ -310,16 +337,16 @@ public class PaletteEditScreen extends Screen {
             int slotY = topPos + playerHotbarStartHeight;
 
             // Draw the slot content
-            ItemStack stack = player.getInventory().getStack(col);
+            ItemStack stack = player.getInventory().getItem(col);
             if (!stack.isEmpty()) {
-                context.drawItem(stack, slotX, slotY);
-                context.drawItemInSlot(this.textRenderer, stack, slotX, slotY);
+                context.renderItem(stack, slotX, slotY);
+                context.renderItemDecorations(this.font, stack, slotX, slotY);
             }
         }
 
         // Draw dragged item
         if (!draggedStack.isEmpty()) {
-            context.drawItem(draggedStack, mouseX - 8, mouseY - 8, 0, 100);
+            context.renderItem(draggedStack, mouseX - 8, mouseY - 8, 0, 100);
         }
 
         // Draw tooltip
@@ -328,10 +355,10 @@ public class PaletteEditScreen extends Screen {
             int slotIndex = getPlayerSlotAt(mouseX, mouseY);
             if (slotIndex >= 0) {
                 ItemStack stack;
-                stack = player.getInventory().getStack(slotIndex);
+                stack = player.getInventory().getItem(slotIndex);
 
                 if (!stack.isEmpty()) {
-                    context.drawTooltip(this.textRenderer, getTooltipFromItem(this.client, stack), mouseX, mouseY);
+                    context.renderComponentTooltip(this.font, getTooltipFromItem(this.minecraft, stack), mouseX, mouseY);
                 }
             }
         }
@@ -343,7 +370,7 @@ public class PaletteEditScreen extends Screen {
         if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
             palette.getWeights().sort((w1, w2) -> Integer.compare(w2.getWeight(), w1.getWeight()));
             palette.applyWeightInputField();
-            client.setScreen(new PaletteListScreen(client));
+            minecraft.setScreen(new PaletteListScreen(minecraft));
             SaveHelper.saveSettings();
             return true;
         }
@@ -383,6 +410,11 @@ public class PaletteEditScreen extends Screen {
         }
 
         return super.keyPressed(keyCode, scanCode, modifiers);
+    }
+
+    @Override
+    public boolean keyReleased(int i, int j, int k) {
+        return super.keyReleased(i, j, k);
     }
 
     @Override
@@ -426,8 +458,28 @@ public class PaletteEditScreen extends Screen {
         return super.charTyped(ch, modifiers);
     }
 
+    @Override
+    public void setFocused(boolean bl) {
+        super.setFocused(bl);
+    }
+
+    @Override
+    public boolean isFocused() {
+        return super.isFocused();
+    }
+
+    @Override
+    public @Nullable ComponentPath getCurrentFocusPath() {
+        return super.getCurrentFocusPath();
+    }
+
+    @Override
+    public @Nullable ComponentPath nextFocusPath(FocusNavigationEvent focusNavigationEvent) {
+        return super.nextFocusPath(focusNavigationEvent);
+    }
+
     public boolean isKeyDown(int keyCode) {
-        long window = client.getWindow().getHandle();
+        long window = minecraft.getWindow().getWindow();
         int state = GLFW.glfwGetKey(window, keyCode);
         return state == GLFW.GLFW_PRESS || state == GLFW.GLFW_REPEAT;
     }
@@ -460,6 +512,11 @@ public class PaletteEditScreen extends Screen {
         }
 
         return new WeightRowInfo();
+    }
+
+    @Override
+    public Optional<GuiEventListener> getChildAt(double d, double e) {
+        return super.getChildAt(d, e);
     }
 
     @Override
@@ -559,7 +616,7 @@ public class PaletteEditScreen extends Screen {
                     }
                 }
             }else{  // Clicked on player inventory
-                ItemStack playerStack = player.getInventory().getStack(slotIndex);
+                ItemStack playerStack = player.getInventory().getItem(slotIndex);
                 this.draggedStack = playerStack.copy();
                 this.draggedStack.setCount(1);
                 handled = true;
@@ -587,9 +644,45 @@ public class PaletteEditScreen extends Screen {
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
 
-        if (button == 0 && clickedOnScroller){
-            clickedOnScroller = false;
-            return true;
+        if (button == 0){
+            if(clickedOnScroller){
+                clickedOnScroller = false;
+                return true;
+            }
+
+            if(this.draggedStack.isEmpty()){
+                return false;
+            }
+
+            List<WeightCategory> weights = palette.getWeights();
+            final int scrollLevel = (int) scrollPosition;
+            int xPos = leftPos + weightContainerStartWidth;
+
+            boolean addedAddBtn = false;
+            for (int weightSlot = scrollLevel; weightSlot < scrollLevel + 8; weightSlot++) {
+
+                WeightRowInfo rowInfo = getRowsWeightInfo(weightSlot, weights);
+
+                int yPos = topPos + weightContainerStartHeight + (weightSlot - scrollLevel) * weightItemsHeight;
+
+                if (rowInfo.isBlank() && !addedAddBtn) {  // Add new element
+                    addedAddBtn = true;
+                } else if (rowInfo.isWeightRow()) {  // Clicked on weight header
+                    // On delete click
+                    if (isPointInRegion(xPos, yPos, weightItemsWidth, weightItemsHeight, (int) mouseX, (int) mouseY)) {
+                        weights.get(rowInfo.weightCategoryId).addItem(draggedStack.copy());
+                        this.draggedStack = ItemStack.EMPTY;
+
+                        return true;
+                    }
+                } else if (!rowInfo.isBlank()) {  // Clicked on inventory area
+                    if (isPointInRegion(xPos, yPos, weightItemsWidth, weightItemsHeight, (int) mouseX, (int) mouseY)) {
+                        weights.get(rowInfo.weightCategoryId).addItem(draggedStack.copy());
+                        this.draggedStack = ItemStack.EMPTY;
+                        return true;
+                    }
+                }
+            }
         }
 
         return super.mouseReleased(mouseX, mouseY, button);
@@ -658,7 +751,7 @@ public class PaletteEditScreen extends Screen {
     }
 
     @Override
-    public void tick(){
+    public void containerTick(){
         if(deleteConfirm > 0)
             deleteConfirm--;
 
@@ -686,6 +779,20 @@ public class PaletteEditScreen extends Screen {
     private boolean isPointInRegion(int x, int y, int width, int height, int pointX, int pointY) {
         return pointX >= x && pointX < x + width && pointY >= y && pointY < y + height;
     }
+
+    @Override
+    public int getTabOrderGroup() {
+        return super.getTabOrderGroup();
+    }
+
+    public void setDraggedStack(ItemStack stack){
+        this.draggedStack = stack;
+    }
+
+    public ItemStack getDraggedStack(){
+        return this.draggedStack;
+    }
+
 
     private class WeightRowInfo {
         public int weight;
