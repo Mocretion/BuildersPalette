@@ -3,6 +3,7 @@ package com.mocretion.blockpalettes.data;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.mocretion.blockpalettes.BlockPalettesClient;
 import com.mocretion.blockpalettes.data.helper.JsonHelper;
 import com.mocretion.blockpalettes.data.helper.SaveHelper;
 import net.minecraft.client.Minecraft;
@@ -36,6 +37,14 @@ public class PaletteManager {
 
     public static List<Palette> getBuilderPalettes() {
         return builderPalettes;
+    }
+
+    public static List<Palette> getBuilderPalettes(String filter) {
+
+        if(filter.startsWith("#"))
+            return builderPalettes.stream().filter(p -> p.getIconName().toLowerCase().startsWith(filter.substring(1).toLowerCase())).toList();
+
+        return builderPalettes.stream().filter(p -> p.getName().toLowerCase().startsWith(filter.toLowerCase())).toList();
     }
 
     public static Map<Integer, Palette> getSelectedPalettes(){

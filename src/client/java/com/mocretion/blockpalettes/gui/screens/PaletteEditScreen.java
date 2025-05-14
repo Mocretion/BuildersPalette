@@ -6,39 +6,33 @@ import com.mocretion.blockpalettes.data.WeightCategory;
 import com.mocretion.blockpalettes.data.helper.SaveHelper;
 import com.mocretion.blockpalettes.gui.ButtonCatalogue;
 import com.mocretion.blockpalettes.gui.ButtonInfo;
-import com.mocretion.blockpalettes.plugins.jei.EmptyContainerMenu;
-import mezz.jei.api.gui.handlers.IGhostIngredientHandler;
-import mezz.jei.api.gui.handlers.IGuiContainerHandler;
-import mezz.jei.api.ingredients.ITypedIngredient;
+import com.mocretion.blockpalettes.gui.screens.menutypes.EditMenu;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ComponentPath;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.ChatComponent;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.navigation.FocusNavigationEvent;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
-import net.minecraft.client.gui.screens.inventory.ContainerScreen;
+import net.minecraft.client.gui.screens.inventory.MenuAccess;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.FormattedCharSequence;
-import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.ChestMenu;
-import net.minecraft.world.inventory.InventoryMenu;
-import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
-import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class PaletteEditScreen extends AbstractContainerScreen<EmptyContainerMenu> {
+/**
+ * I know this is a mess
+ */
+public class PaletteEditScreen extends AbstractContainerScreen<EditMenu> implements MenuAccess<EditMenu> {
     private static final ResourceLocation BG_TEXTURE = ResourceLocation.fromNamespaceAndPath(BlockPalettesClient.MOD_ID, "textures/gui/palette_view.png");
     private static final ResourceLocation ADD_WEIGHT_TEXTURE = ResourceLocation.fromNamespaceAndPath(BlockPalettesClient.MOD_ID, "textures/gui/add_row.png");
     private static final ResourceLocation INVENTORY_ROW_TEXTURE = ResourceLocation.fromNamespaceAndPath(BlockPalettesClient.MOD_ID, "textures/gui/inventory_row.png");
@@ -109,9 +103,17 @@ public class PaletteEditScreen extends AbstractContainerScreen<EmptyContainerMen
     private int toBeDeletedId;
 
     public PaletteEditScreen(Player player, Palette palette) {
-        super(new EmptyContainerMenu(), new Inventory(player), Component.translatable("container.blockpalettes.editTitle"));
+        super(new EditMenu(0, player.getInventory()), player.getInventory(), Component.translatable("container.blockpalettes.editTitle"));
         this.player = player;
         this.palette = palette;
+        this.selectedInputBlink = 0;
+        this.markedEntireInput = false;
+    }
+
+    public PaletteEditScreen(EditMenu handler, Inventory playerInv, Component title) {
+        super(handler, playerInv, title);
+        this.player = playerInv.player;
+        this.palette = null;
         this.selectedInputBlink = 0;
         this.markedEntireInput = false;
     }
@@ -119,9 +121,15 @@ public class PaletteEditScreen extends AbstractContainerScreen<EmptyContainerMen
     @Override
     protected void init() {
         super.init();
+
         this.leftPos = (this.width - this.backgroundWidth) / 2;
         this.topPos = (this.height - this.backgroundHeight) / 2;
         this.selectedInput = -2;
+    }
+
+    @Override
+    protected void renderLabels(GuiGraphics guiGraphics, int i, int j) {
+
     }
 
     @Override
@@ -135,15 +143,14 @@ public class PaletteEditScreen extends AbstractContainerScreen<EmptyContainerMen
 
     @Override
     protected void renderBg(GuiGraphics guiGraphics, float f, int i, int j) {
-
     }
 
     @Override
     public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
 
-        //super.render(context, mouseX, mouseY, delta);
+        super.render(context, mouseX, mouseY, delta);
 
-        renderBackground(context, mouseX, mouseY, delta);
+        //renderBackground(context, mouseX, mouseY, delta);
 
         // Draw title
         String titleText = palette.getName();
@@ -292,7 +299,7 @@ public class PaletteEditScreen extends AbstractContainerScreen<EmptyContainerMen
                             if (!hoveredItem.isEmpty()) {
                                 context.renderComponentTooltip(this.font, getTooltipFromItem(this.minecraft, hoveredItem), mouseX, mouseY);
                             }
-                        }else{  // How 2 add tolltip
+                        }else{
                             context.renderComponentTooltip(this.font, Component.translatable("container.blockpalettes.addItemToWeight").toFlatList(), mouseX, mouseY);
                         }
                     }
@@ -376,7 +383,7 @@ public class PaletteEditScreen extends AbstractContainerScreen<EmptyContainerMen
         }
 
         // Handle Input
-        if(selectedInput > -1) {  // Handle Weight Input
+        if(this.selectedInput > -1) {  // Handle Weight Input
             WeightCategory weightCat = palette.getWeights().get(selectedInput);
 
             // Handle special keys
@@ -407,6 +414,10 @@ public class PaletteEditScreen extends AbstractContainerScreen<EmptyContainerMen
                 markedEntireInput = true;
                 return true;
             }
+        }
+
+        if(keyCode == GLFW.GLFW_KEY_E){
+            return false;
         }
 
         return super.keyPressed(keyCode, scanCode, modifiers);
@@ -553,6 +564,7 @@ public class PaletteEditScreen extends AbstractContainerScreen<EmptyContainerMen
                 // Click export
                 if(isPointInRegion(leftPos + exportButtonMarginX, topPos + exportButtonMarginY, ButtonCatalogue.smallButtonSize, ButtonCatalogue.smallButtonSize, (int)mouseX, (int)mouseY)) {
                     palette.exportToClipboard();
+                    playButtonClickSound();
                     handled = true;
                 }
 
@@ -575,6 +587,7 @@ public class PaletteEditScreen extends AbstractContainerScreen<EmptyContainerMen
                         if (isPointInRegion(xPos, yPos, weightItemsWidth, weightItemsHeight, (int) mouseX, (int) mouseY)) {
                             this.palette.addWeight(new WeightCategory(100, new ArrayList<>()));
                             handled = true;
+                            playButtonClickSound();
                             break;
                         }
                         addedAddBtn = true;
@@ -589,6 +602,7 @@ public class PaletteEditScreen extends AbstractContainerScreen<EmptyContainerMen
                                this.removeWeight(rowInfo.weightCategoryId);
                             }
                             handled = true;
+                            playButtonClickSound();
                             break;
                         }
                         // Click somewhere else on header
@@ -652,6 +666,13 @@ public class PaletteEditScreen extends AbstractContainerScreen<EmptyContainerMen
 
             if(this.draggedStack.isEmpty()){
                 return false;
+            }
+
+            // Set icon
+            if(isPointInRegion(leftPos + iconMarginX, topPos + iconMarginY, 16, 16, (int)mouseX, (int)mouseY)){
+                this.palette.setIcon(draggedStack.copy());
+                this.draggedStack = ItemStack.EMPTY;
+                return true;
             }
 
             List<WeightCategory> weights = palette.getWeights();
@@ -773,6 +794,10 @@ public class PaletteEditScreen extends AbstractContainerScreen<EmptyContainerMen
     private int getCurrentScrollerYPosition(){
         final int scrollLevel = (int)scrollPosition;
 
+        if(palette.getScreenRowCount() == 0){
+            return topPos + scrollMarginY;
+        }
+
         return (int)(topPos + scrollMarginY + ((float)scrollLevel / palette.getScreenRowCount() * (scrollbarHeight - scrollerHeight)));
     }
 
@@ -785,6 +810,11 @@ public class PaletteEditScreen extends AbstractContainerScreen<EmptyContainerMen
         return super.getTabOrderGroup();
     }
 
+    @Override
+    public boolean isPauseScreen() {
+        return true;
+    }
+
     public void setDraggedStack(ItemStack stack){
         this.draggedStack = stack;
     }
@@ -793,6 +823,12 @@ public class PaletteEditScreen extends AbstractContainerScreen<EmptyContainerMen
         return this.draggedStack;
     }
 
+    public static void playButtonClickSound() {
+        Minecraft client = Minecraft.getInstance();
+        client.getSoundManager().play(
+                SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F)
+        );
+    }
 
     private class WeightRowInfo {
         public int weight;

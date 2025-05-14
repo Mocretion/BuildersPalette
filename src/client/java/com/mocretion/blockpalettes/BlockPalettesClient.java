@@ -4,16 +4,22 @@ import com.mocretion.blockpalettes.data.Palette;
 import com.mocretion.blockpalettes.data.PaletteManager;
 import com.mocretion.blockpalettes.data.WeightCategory;
 import com.mocretion.blockpalettes.gui.hud.HudRenderer;
+import com.mocretion.blockpalettes.gui.screens.PaletteEditScreen;
 import com.mocretion.blockpalettes.gui.screens.PaletteListScreen;
+import com.mocretion.blockpalettes.gui.screens.menutypes.AllMenus;
+import com.mocretion.blockpalettes.gui.screens.menutypes.EditMenu;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.fabricmc.api.ClientModInitializer;
 
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.RandomSource;
@@ -31,6 +37,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+@Environment(EnvType.CLIENT)
 public class BlockPalettesClient implements ClientModInitializer {
 	public static final String MOD_ID = "blockpalettes";
 	public static final String MOD_NAME = "BlockPalettes";
@@ -49,6 +56,8 @@ public class BlockPalettesClient implements ClientModInitializer {
 		// Proceed with mild caution.
 
 		// populizePalettesTest();
+
+		MenuScreens.register(AllMenus.EDIT_MENU_HANDLER, (MenuScreens.ScreenConstructor<EditMenu, PaletteEditScreen>)PaletteEditScreen::new);
 
 		registerKeyBidnings();
 	}

@@ -23,6 +23,12 @@
 		],
 		"jei_mod_plugin": [
 			"com.mocretion.blockpalettes.plugins.jei.JustEnoughItemsClient"
+		],
+		"emi": [
+			"com.mocretion.blockpalettes.plugins.emi.EmiClient"
+		],
+		"rei_client": [
+			"com.mocretion.blockpalettes.plugins.rei.ReiClient"
 		]
 	},
 	"mixins": [

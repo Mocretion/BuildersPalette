@@ -78,7 +78,7 @@ public class JustEnoughItemsClient implements IModPlugin {
     @Override
     public void registerGuiHandlers(IGuiHandlerRegistration registration) {
 
-        registration.addGhostIngredientHandler(PaletteEditScreen.class, new GhostHandler());
+        registration.addGhostIngredientHandler(PaletteEditScreen.class, new JeiGhostHandler());
 
         IModPlugin.super.registerGuiHandlers(registration);
     }

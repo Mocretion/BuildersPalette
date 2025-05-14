@@ -40,8 +40,14 @@
   "container.blockpalettes.deselectPalettes": "Deselect All Palettes",
   "container.blockpalettes.importPalette": "Import Palette From Clipboard",
   "container.blockpalettes.exportPalette": "Export Palette To Clipboard",
+  "container.blockpalettes.filterPalettesByName": "Filter Palettes by Name",
+  "container.blockpalettes.filterPalettesByNameInfo": "§8Add '#' as prefix to search for the icon name",
+  "container.blockpalettes.paletteIcon": "§8Icon: ",
 
   "container.blockpalettes.moreDetails": "§8Press Shift for more information",
+  "container.blockpalettes.currentState": "§7Current state: ",
+  "container.blockpalettes.enabled": "§aEnabled",
+  "container.blockpalettes.disabled": "§cDisabled",
 
   "category.blockpalettes.keys": "Block Palettes",
   "key.blockpalettes.open_palettes_screen": "Toggle Palette UI"

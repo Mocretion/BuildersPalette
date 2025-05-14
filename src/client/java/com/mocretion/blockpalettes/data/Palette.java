@@ -67,6 +67,12 @@ public class Palette {
         return icon;
     }
 
+    public String getIconName(){
+        String itemName = getIcon().getDisplayName().getString();  // returns [item_name_or_renamed_name] (with brackets)
+        itemName = itemName.substring(1, itemName.length() - 1);  // remove brackets
+        return itemName;
+    }
+
     public void setIcon(ItemStack icon) {
         this.icon = icon;
     }

@@ -10,12 +10,15 @@ import com.mocretion.blockpalettes.gui.ButtonInfo;
 import com.mocretion.blockpalettes.gui.draw.CustomDrawContext;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import org.lwjgl.glfw.GLFW;
@@ -29,7 +32,6 @@ public class PaletteListScreen extends Screen {
     private static final ResourceLocation PALETTE_PREVIEW_TEXTURE = ResourceLocation.fromNamespaceAndPath(BlockPalettesClient.MOD_ID, "textures/gui/palette_preview.png");
     private static final ResourceLocation ADD_PALETTE_TEXTURE = ResourceLocation.fromNamespaceAndPath(BlockPalettesClient.MOD_ID, "textures/gui/add_palette.png");
     private static final ResourceLocation SCROLLER_TEXTURE = ResourceLocation.fromNamespaceAndPath(BlockPalettesClient.MOD_ID, "textures/gui/scroller.png");
-
     // GUI dimensions
     private final int backgroundWidth = 195;
     private final int backgroundHeight = 256;
@@ -58,6 +60,10 @@ public class PaletteListScreen extends Screen {
     private final int paletteToggleEnabledMarginX = 7;
     private final int paletteDeselectAllMarginX = 23;
     private final int paletteImportMarginX = 39;
+    private final int paletteSearchMarginX = 57;
+    private final int paletteSearchMarginY = 241;
+    private final int paletteSearchWidth = 112;
+    private final int paletteSearchHeight = 10;
     private final int itemSlotSize = 18;
 
     private final int maxPaletteTitleWidth = 80;
@@ -73,6 +79,14 @@ public class PaletteListScreen extends Screen {
     private double scrollPosition;
     private boolean clickedOnScroller;
 
+    // Input fields
+    private String searchText;
+    private boolean isInputSelected;
+    private byte selectedInputBlink;
+    private static final byte SELECTED_INPUT_BLINK_DURATION = 10;
+    private boolean markedEntireInput;
+    private static final int MAX_TITLE_LENGTH = 18;
+
     private Minecraft client;
 
     public PaletteListScreen(Minecraft client) {
@@ -83,6 +97,7 @@ public class PaletteListScreen extends Screen {
     @Override
     protected void init() {
         super.init();
+        searchText = "";
         this.leftPos = (this.width - this.backgroundWidth) / 2;
         this.topPos = (this.height - this.backgroundHeight) / 2;
     }
@@ -112,23 +127,32 @@ public class PaletteListScreen extends Screen {
         final int scrollLevel = (int)scrollPosition;
         context.blit(SCROLLER_TEXTURE, leftPos + scrollMarginX, getCurrentScrollerYPosition(), 0, 0, scrollerWidth, scrollerHeight);
 
+        // Draw searchText
+        String editedSearchText = searchText;
+
+        if(isInputSelected && selectedInputBlink < SELECTED_INPUT_BLINK_DURATION)
+            editedSearchText += "_";
+        context.drawString(this.font, editedSearchText,
+                leftPos + paletteSearchMarginX,
+                topPos + paletteSearchMarginY,
+                this.markedEntireInput ? 0x539de6 : 0xffffff, true);
 
         // Draw visual inventory slots
-        List<Palette> palettes = PaletteManager.getBuilderPalettes();
+        List<Palette> palettes = PaletteManager.getBuilderPalettes(searchText);
         int xPos = leftPos + paletteContainerStartWidth;
         for (int paletteNo = scrollLevel; paletteNo < scrollLevel + 4; paletteNo++) {
 
             int slotNo = paletteNo - scrollLevel;
             int yPos = topPos + paletteContainerStartHeight + slotNo * paletteItemHeight;
 
-            if(paletteNo == PaletteManager.getBuilderPalettes().size()){  // Add new element
+            if(paletteNo == palettes.size()){  // Add new element
                 context.blit(ADD_PALETTE_TEXTURE, xPos, yPos, 0, 0, paletteItemWidth, paletteItemHeight);
 
                 if(isPointInRegion(xPos, yPos, paletteItemWidth, paletteItemHeight, mouseX, mouseY)){
                     context.renderComponentTooltip(this.font, Component.translatable("container.blockpalettes.addPalette").toFlatList(), mouseX, mouseY);
                 }
 
-            }else if(paletteNo < PaletteManager.getBuilderPalettes().size()){  // List existing element
+            }else if(paletteNo < palettes.size()){  // List existing element
                 Palette palette = palettes.get(paletteNo);
                 context.blit(PALETTE_PREVIEW_TEXTURE, xPos, yPos, 0, 0, paletteItemWidth, paletteItemHeight);
 
@@ -173,7 +197,11 @@ public class PaletteListScreen extends Screen {
                 // Draw hover texture
                 else if(isPointInRegion(xPos, yPos, paletteItemWidth, paletteItemHeight, mouseX, mouseY)){
                     context.blit(PALETTE_PREVIEW_TEXTURE, xPos, yPos, 0, paletteItemHeight, paletteItemWidth, paletteItemHeight);
-                    context.renderComponentTooltip(this.font, Component.literal(palette.getName()).toFlatList(), mouseX, mouseY);
+
+                    List<FormattedCharSequence> paletteNameTooltip = new ArrayList<>();
+                    paletteNameTooltip.add(Component.literal(palette.getName()).getVisualOrderText());
+                    paletteNameTooltip.add(Component.translatable("container.blockpalettes.paletteIcon").append("§8" + palette.getIconName()).getVisualOrderText());
+                    context.renderTooltip(this.font, paletteNameTooltip, mouseX, mouseY);
                 }
 
                 // Draw selected texture
@@ -202,7 +230,13 @@ public class PaletteListScreen extends Screen {
         if(isPointInRegion(leftPos + paletteToggleEnabledMarginX, topPos + paletteButtonMarginY, ButtonCatalogue.smallButtonSize, ButtonCatalogue.smallButtonSize, (int)mouseX, (int)mouseY)){
             ButtonInfo btnInfo = ButtonCatalogue.getTogglePalettesHover();
             context.blit(btnInfo.identifier, leftPos + paletteToggleEnabledMarginX, topPos + paletteButtonMarginY, btnInfo.u, btnInfo.v, ButtonCatalogue.smallButtonSize, ButtonCatalogue.smallButtonSize);
-            context.renderComponentTooltip(this.font, Component.translatable("container.blockpalettes.togglePalettes").toFlatList(), mouseX, mouseY);
+
+            List<FormattedCharSequence> togglePaletteTooltip = new ArrayList<>();
+            togglePaletteTooltip.add(Component.translatable("container.blockpalettes.togglePalettes").getVisualOrderText());
+            togglePaletteTooltip.add(Component.empty().getVisualOrderText());
+            togglePaletteTooltip.add(Component.translatable("container.blockpalettes.currentState").append(PaletteManager.getIsEnabled() ? Component.translatable("container.blockpalettes.enabled") : Component.translatable("container.blockpalettes.disabled")).getVisualOrderText());
+
+            context.renderTooltip(this.font, togglePaletteTooltip, mouseX, mouseY);
         }  // Deselect all palettes
         else if(isPointInRegion(leftPos + paletteDeselectAllMarginX, topPos + paletteButtonMarginY, ButtonCatalogue.smallButtonSize, ButtonCatalogue.smallButtonSize, (int)mouseX, (int)mouseY)){
             ButtonInfo btnInfo = ButtonCatalogue.getDeselectAllHover();
@@ -213,32 +247,53 @@ public class PaletteListScreen extends Screen {
             ButtonInfo btnInfo = ButtonCatalogue.getImportHover();
             context.blit(btnInfo.identifier, leftPos + paletteImportMarginX, topPos + paletteButtonMarginY, btnInfo.u, btnInfo.v, ButtonCatalogue.smallButtonSize, ButtonCatalogue.smallButtonSize);
             context.renderComponentTooltip(this.font, Component.translatable("container.blockpalettes.importPalette").toFlatList(), mouseX, mouseY);
+        }  // Searchbar
+        else if(isPointInRegion(leftPos + paletteSearchMarginX, topPos + paletteSearchMarginY, paletteSearchWidth, paletteSearchHeight, (int)mouseX, (int)mouseY)){
+
+            List<FormattedCharSequence> searchbarTooltip = new ArrayList<>();
+            searchbarTooltip.add(Component.translatable("container.blockpalettes.filterPalettesByName").getVisualOrderText());
+            searchbarTooltip.add(Component.empty().getVisualOrderText());
+            searchbarTooltip.add(Component.translatable("container.blockpalettes.filterPalettesByNameInfo").getVisualOrderText());
+
+            context.renderTooltip(this.font, searchbarTooltip, mouseX, mouseY);
         }
     }
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
 
-        List<Palette> palettes = PaletteManager.getBuilderPalettes();
+        isInputSelected = false;
+        selectedInputBlink = 0;
+        markedEntireInput = false;
+
+        List<Palette> palettes = PaletteManager.getBuilderPalettes(this.searchText);
         final int scrollLevel = (int)scrollPosition;
         int xPos = leftPos + paletteContainerStartWidth;
 
         // Toggle Palette Enabled
         if(isPointInRegion(leftPos + paletteToggleEnabledMarginX, topPos + paletteButtonMarginY, ButtonCatalogue.smallButtonSize, ButtonCatalogue.smallButtonSize, (int)mouseX, (int)mouseY)){
             PaletteManager.toggleEnabled();
+            playButtonClickSound();
             return true;
         }  // Deselect all palettes
         else if(isPointInRegion(leftPos + paletteDeselectAllMarginX, topPos + paletteButtonMarginY, ButtonCatalogue.smallButtonSize, ButtonCatalogue.smallButtonSize, (int)mouseX, (int)mouseY)){
             PaletteManager.deselectAllPalettes();
+            playButtonClickSound();
             return true;
         }  // Import palette
         else if(isPointInRegion(leftPos + paletteImportMarginX, topPos + paletteButtonMarginY, ButtonCatalogue.smallButtonSize, ButtonCatalogue.smallButtonSize, (int)mouseX, (int)mouseY)){
             PaletteManager.importPalette();
+            playButtonClickSound();
             return true;
         }  // Clicked on scroller
         else if(isPointInRegion(leftPos + scrollMarginX, getCurrentScrollerYPosition(), scrollerWidth, scrollerHeight, (int)mouseX, (int)mouseY)) {
             clickedOnScroller = true;
             return true;
+        }  // Clicked on searchbar
+        else if(isPointInRegion(leftPos + paletteSearchMarginX, topPos + paletteSearchMarginY, paletteSearchWidth, paletteSearchHeight, (int)mouseX, (int)mouseY)){
+            isInputSelected = true;
+            selectedInputBlink = 0;
+            markedEntireInput = false;
         }
 
         for (int paletteNo = scrollLevel; paletteNo < scrollLevel + 4; paletteNo++) {
@@ -246,25 +301,28 @@ public class PaletteListScreen extends Screen {
             int slotNo = paletteNo - scrollLevel;
             int yPos = topPos + paletteContainerStartHeight + slotNo * paletteItemHeight;
 
-            if(paletteNo == PaletteManager.getBuilderPalettes().size()){  // Add new element
+            if(paletteNo == palettes.size()){  // Add new element
                 if(isPointInRegion(xPos, yPos, paletteItemWidth, paletteItemHeight, (int)mouseX, (int)mouseY)){
                     WeightCategory newWeightCat = new WeightCategory(100, new ArrayList<>());
                     Palette newPalette = new Palette("", new ItemStack(Items.GRASS_BLOCK), 9, new ArrayList<>(List.of(newWeightCat)));
-                    palettes.add(newPalette);
+                    PaletteManager.getBuilderPalettes().add(newPalette);
                     client.setScreen(new PaletteEditScreen(client.player, newPalette));
+                    playButtonClickSound();
                     return true;
                 }
-            }else if(paletteNo < PaletteManager.getBuilderPalettes().size()){  // List existing element
+            }else if(paletteNo < palettes.size()){  // List existing element
                 Palette palette = palettes.get(paletteNo);
 
                 // Enter edit mode
                 if(isPointInRegion(xPos + paletteEditMarginX, yPos + paletteEditMarginY, ButtonCatalogue.smallButtonSize, ButtonCatalogue.smallButtonSize, (int)mouseX, (int)mouseY)){
                     client.setScreen(new PaletteEditScreen(client.player, palette));
+                    playButtonClickSound();
                     return true;
 
                 }  // Delete palette
                 else if(isPointInRegion(xPos + paletteDeleteMarginX, yPos + paletteDeleteMarginY, ButtonCatalogue.smallButtonSize, ButtonCatalogue.smallButtonSize, (int)mouseX, (int)mouseY)) {
 
+                    playButtonClickSound();
                     if (toBeDeletedId >= 0 && deleteConfirm > 0) {
                         PaletteManager.deletePalette(toBeDeletedId);
                         deleteConfirm = 0;
@@ -272,13 +330,15 @@ public class PaletteListScreen extends Screen {
                     } else {
                         this.toBeDeletedId = paletteNo;
                         this.deleteConfirm = DELETE_DOUBLE_CLICK_DURATION;
-                        return true;
                     }
+                    return true;
+
                 }  // Select hotbar slot
                 else if(isPointInRegion(xPos + paletteHotbarMarginX, yPos + paletteHotbarMarginY, ButtonCatalogue.smallButtonSize * 9, ButtonCatalogue.smallButtonSize, (int)mouseX, (int)mouseY)) {
 
                     int clickedHotbarSlot = ((int)mouseX - xPos - paletteHotbarMarginX) / ButtonCatalogue.smallButtonSize;
                     palette.setHotbarSlot(clickedHotbarSlot + 1);
+                    playButtonClickSound();
                     return true;
                 }
                 // Select palette
@@ -287,6 +347,8 @@ public class PaletteListScreen extends Screen {
                     if(PaletteManager.addSelectedPalettes(palette)){
                         PaletteManager.setIsEnabled(true);
                     }
+
+                    playButtonClickSound();
                     return true;
                 }
             }else{
@@ -306,7 +368,50 @@ public class PaletteListScreen extends Screen {
             return true;
         }
 
+        if(isInputSelected){
+            if (keyCode == GLFW.GLFW_KEY_BACKSPACE && !this.searchText.isEmpty()) {
+
+                if (!markedEntireInput)// Remove the last character
+                    searchText = searchText.substring(0, searchText.length() - 1);
+                else {
+                    searchText = "";
+                    markedEntireInput = false;
+                }
+                return true;
+            } else if (modifiers == 2 && keyCode == GLFW.GLFW_KEY_A) {
+                markedEntireInput = true;
+                return true;
+            }
+        }
+
+        if(keyCode == GLFW.GLFW_KEY_E){
+            return false;
+        }
+
         return super.keyPressed(keyCode, scanCode, modifiers);
+    }
+
+    @Override
+    public boolean charTyped(char ch, int modifiers) {
+
+        if (isInputSelected) {
+
+            if (this.markedEntireInput) {
+                searchText = ch + "";
+                this.markedEntireInput = false;
+                return true;
+            } else {
+
+                if(searchText.length() == MAX_TITLE_LENGTH)
+                    return false;
+
+                searchText += ch;
+                return true;
+            }
+
+        }
+
+        return super.charTyped(ch, modifiers);
     }
 
     @Override
@@ -324,13 +429,13 @@ public class PaletteListScreen extends Screen {
     public void mouseMoved(double mouseX, double mouseY) {
 
         if(clickedOnScroller) {
-            double scrollStepHeight = scrollbarHeight / (double) PaletteManager.getBuilderPalettes().size();
+            double scrollStepHeight = scrollbarHeight / (double) PaletteManager.getBuilderPalettes(this.searchText).size();
             double relativeMousePosY = mouseY - topPos - scrollMarginY + (scrollStepHeight / 2);
 
             if (relativeMousePosY <= 0) {
                 scrollPosition = 0;
             } else if (relativeMousePosY >= scrollbarHeight) {
-                scrollPosition = PaletteManager.getBuilderPalettes().size();
+                scrollPosition = PaletteManager.getBuilderPalettes(this.searchText).size();
             } else {
                 scrollPosition = (relativeMousePosY) / scrollStepHeight;
             }
@@ -344,8 +449,8 @@ public class PaletteListScreen extends Screen {
 
         if(scrollPosition <= 0)
             scrollPosition = 0;
-        else if(scrollPosition >= PaletteManager.getBuilderPalettes().size())
-            scrollPosition = PaletteManager.getBuilderPalettes().size();
+        else if(scrollPosition >= PaletteManager.getBuilderPalettes(this.searchText).size())
+            scrollPosition = PaletteManager.getBuilderPalettes(this.searchText).size();
 
         return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
     }
@@ -354,15 +459,31 @@ public class PaletteListScreen extends Screen {
     public void tick(){
         if(deleteConfirm > 0)
             deleteConfirm--;
+
+        selectedInputBlink++;
+
+        if(selectedInputBlink >= SELECTED_INPUT_BLINK_DURATION * 2)
+            selectedInputBlink = 0;
     }
 
     private int getCurrentScrollerYPosition(){
         final int scrollLevel = (int)scrollPosition;
+
+        if(PaletteManager.getBuilderPalettes(this.searchText).isEmpty()){
+            return topPos + scrollMarginY;
+        }
 
         return (int)(topPos + scrollMarginY + ((float)scrollLevel / PaletteManager.getBuilderPalettes().size() * (scrollbarHeight - scrollerHeight)));
     }
 
     private boolean isPointInRegion(int x, int y, int width, int height, int pointX, int pointY) {
         return pointX >= x && pointX < x + width && pointY >= y && pointY < y + height;
+    }
+
+    public static void playButtonClickSound() {
+        Minecraft client = Minecraft.getInstance();
+        client.getSoundManager().play(
+                SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F)
+        );
     }
 }
