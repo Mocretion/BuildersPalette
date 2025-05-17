@@ -83,6 +83,7 @@ public class BlockPalettesClient implements ClientModInitializer {
 			}
 		});
 
+		// Add about-to-be-placed-blocks to a list
 		UseBlockCallback.EVENT.register((player, world, hand, hitResult) ->{
 			if(world.isClientSide() && player instanceof LocalPlayer){
 
@@ -101,6 +102,7 @@ public class BlockPalettesClient implements ClientModInitializer {
             return InteractionResult.PASS;
         });
 
+		// Add check if blocks were actually placed next tick
 		ClientTickEvents.END_CLIENT_TICK.register(server -> {
 			if (!pendingChecks.isEmpty()) {
 				Iterator<PendingBlockCheck> iterator = pendingChecks.iterator();

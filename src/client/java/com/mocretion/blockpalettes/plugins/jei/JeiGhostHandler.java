@@ -10,7 +10,10 @@ import java.util.List;
 
 public class JeiGhostHandler implements IGhostIngredientHandler<PaletteEditScreen> {
     @Override
-    public <I> List<Target<I>> getTargetsTyped(PaletteEditScreen paletteEditScreen, ITypedIngredient<I> iTypedIngredient, boolean b) {
+    public <I> List<Target<I>> getTargetsTyped(PaletteEditScreen paletteEditScreen, ITypedIngredient<I> iTypedIngredient, boolean doStart) {
+
+        if(!doStart)
+            return new ArrayList<>();
 
         if(iTypedIngredient == null || iTypedIngredient.getItemStack().isEmpty())
             return new ArrayList<>();

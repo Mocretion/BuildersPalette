@@ -9,6 +9,7 @@ public class ButtonCatalogue {
     private static final ResourceLocation HUD_TEXTURE = ResourceLocation.fromNamespaceAndPath(BlockPalettesClient.MOD_ID, "textures/gui/hotbar_hud.png");
 
     public static final int smallButtonSize = 14;
+    public static final int xsButtonSize = 10;
 
     public static ButtonInfo getDeleteConfirm(){
         return new ButtonInfo(BUTTON_TEXTURE, 0, 0);
@@ -42,6 +43,15 @@ public class ButtonCatalogue {
     // ====== Next Row ======
     public static ButtonInfo getSelectionButton(int i){
         return new ButtonInfo(BUTTON_TEXTURE, smallButtonSize * i, smallButtonSize);
+    }
+
+    // ====== Next Row ======
+    public static ButtonInfo getSelectionButtonXs(int i){
+        return new ButtonInfo(BUTTON_TEXTURE, xsButtonSize * i, smallButtonSize * 2);
+    }
+
+    public static ButtonInfo getToggleLayoutHover(){
+        return new ButtonInfo(BUTTON_TEXTURE, xsButtonSize * 9, smallButtonSize * 2);
     }
 
     // ====== HUD ======

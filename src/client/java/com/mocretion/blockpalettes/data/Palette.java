@@ -9,6 +9,7 @@ import com.mocretion.blockpalettes.data.helper.SaveHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ServerboundSetCreativeModeSlotPacket;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -53,7 +54,7 @@ public class Palette {
     public String getShortenedName(Font renderer, int maxWidth){
         if(renderer.width(getName()) > maxWidth){
             String trimmed = renderer.plainSubstrByWidth(getName(), maxWidth);
-            trimmed = trimmed.substring(0, trimmed.length() - 4) + "...";
+            trimmed = trimmed.substring(0, trimmed.length() - 3) + "...";
             return trimmed;
         }
         return name;
@@ -134,46 +135,53 @@ public class Palette {
         if(totalWeight == 0)
             return;
 
-        int randomWeight = BlockPalettesClient.random.nextIntBetweenInclusive(1, totalWeight);
-        totalWeight = 0;
-        WeightCategory selectedWeightCat = null;
-        for(WeightCategory cat : getWeights()){
-            totalWeight += cat.getWeight();
+        // 5 tries to select block
+        for (int t = 0; t < 5; t++) {
 
-            if(totalWeight >= randomWeight){
-                selectedWeightCat = cat;
-                break;
-            }
-        }
+            int randomWeight = BlockPalettesClient.random.nextIntBetweenInclusive(1, totalWeight);
+            int weight = 0;
+            WeightCategory selectedWeightCat = null;
+            for (WeightCategory cat : getWeights()) {
+                weight += cat.getWeight();
 
-        if(selectedWeightCat == null)
-            return;
-
-        if(selectedWeightCat.getItems().isEmpty())
-            return;
-
-        int randomBlock = BlockPalettesClient.random.nextIntBetweenInclusive(0, selectedWeightCat.getItems().size() - 1);
-        ItemStack randomStack = selectedWeightCat.getItems().get(randomBlock);
-
-        Inventory playerInv = player.getInventory();
-        AbstractContainerMenu screenHandler = player.containerMenu;
-
-        if(player.getAbilities().instabuild){
-            ServerboundSetCreativeModeSlotPacket packet =
-                    new ServerboundSetCreativeModeSlotPacket(hotbarSlot + 36, randomStack);
-            ((LocalPlayer)player).connection.send(packet);
-        }else {
-
-            for (int i = 0; i < playerInv.items.size(); i++) {
-
-                int slot = i < 9 ? i + 36 : i;
-                ItemStack playerStack = playerInv.items.get(i);
-
-                if (ItemStack.isSameItemSameComponents(playerStack, randomStack)) {
-                    Minecraft.getInstance().gameMode.handleInventoryMouseClick(screenHandler.containerId, slot, hotbarSlot, ClickType.SWAP, player);
+                if (weight >= randomWeight) {
+                    selectedWeightCat = cat;
                     break;
                 }
             }
+
+            if (selectedWeightCat == null)
+                return;
+
+            if (selectedWeightCat.getItems().isEmpty())
+                return;
+
+            int randomBlock = BlockPalettesClient.random.nextIntBetweenInclusive(0, selectedWeightCat.getItems().size() - 1);
+            ItemStack randomStack = selectedWeightCat.getItems().get(randomBlock);
+
+            Inventory playerInv = player.getInventory();
+            AbstractContainerMenu screenHandler = player.containerMenu;
+
+            if (player.getAbilities().instabuild) {
+                ServerboundSetCreativeModeSlotPacket packet =
+                        new ServerboundSetCreativeModeSlotPacket(hotbarSlot + 36, randomStack);
+                ((LocalPlayer) player).connection.send(packet);
+                return;
+            } else {
+
+                for (int i = 0; i < playerInv.items.size(); i++) {
+
+                    int slot = i < 9 ? i + 36 : i;
+                    ItemStack playerStack = playerInv.items.get(i);
+
+                    if (ItemStack.isSameItemSameComponents(playerStack, randomStack)) {
+                        Minecraft.getInstance().gameMode.handleInventoryMouseClick(screenHandler.containerId, slot, hotbarSlot, ClickType.SWAP, player);
+                        return;
+                    }
+                }
+            }
+
+            player.displayClientMessage(Component.literal("§cBlock Palettes: " + randomStack.getDisplayName().getString()).append(Component.translatable("container.blockpalettes.itemNotFound")), true);
         }
     }
 

@@ -30,6 +30,7 @@
   "container.blockpalettes.addWeight": "Add New Weight Category",
   "container.blockpalettes.deleteWeight": "Delete (Double-Click)",
   "container.blockpalettes.addItemToWeight": "To add an item, drag and drop it here",
+  "container.blockpalettes.addItemToWeightJEIInfo": "§7You can drag items from your inventory, or, if installed, §dE§aM§bI§2, JEI§2, or §fREI",
 
 
   "container.blockpalettes.editPalette": "Edit Palette",
@@ -42,12 +43,15 @@
   "container.blockpalettes.exportPalette": "Export Palette To Clipboard",
   "container.blockpalettes.filterPalettesByName": "Filter Palettes by Name",
   "container.blockpalettes.filterPalettesByNameInfo": "§8Add '#' as prefix to search for the icon name",
+  "container.blockpalettes.toggleLayout": "Change Layout",
   "container.blockpalettes.paletteIcon": "§8Icon: ",
 
   "container.blockpalettes.moreDetails": "§8Press Shift for more information",
   "container.blockpalettes.currentState": "§7Current state: ",
   "container.blockpalettes.enabled": "§aEnabled",
   "container.blockpalettes.disabled": "§cDisabled",
+
+  "container.blockpalettes.itemNotFound": "§c not found in inventory!",
 
   "category.blockpalettes.keys": "Block Palettes",
   "key.blockpalettes.open_palettes_screen": "Toggle Palette UI"

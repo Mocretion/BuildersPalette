@@ -300,7 +300,19 @@ public class PaletteEditScreen extends AbstractContainerScreen<EditMenu> impleme
                                 context.renderComponentTooltip(this.font, getTooltipFromItem(this.minecraft, hoveredItem), mouseX, mouseY);
                             }
                         }else{
-                            context.renderComponentTooltip(this.font, Component.translatable("container.blockpalettes.addItemToWeight").toFlatList(), mouseX, mouseY);
+                            List<FormattedCharSequence> addItemsTooltip = new ArrayList<>();
+                            addItemsTooltip.add(Component.translatable("container.blockpalettes.addItemToWeight").getVisualOrderText());
+                            addItemsTooltip.add(Component.empty().getVisualOrderText());
+
+                            if(isKeyDown(GLFW.GLFW_KEY_LEFT_SHIFT)) {
+                                addItemsTooltip.add(Component.translatable("container.blockpalettes.addItemToWeightJEIInfo").getVisualOrderText());
+
+                            }else{
+                                addItemsTooltip.add(Component.translatable("container.blockpalettes.moreDetails").getVisualOrderText());
+                            }
+
+                            context.renderTooltip(this.font, addItemsTooltip, mouseX, mouseY);
+
                         }
                     }
                 }

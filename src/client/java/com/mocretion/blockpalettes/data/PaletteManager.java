@@ -18,11 +18,13 @@ public class PaletteManager {
     private static List<Palette> builderPalettes = new ArrayList<>();
     private static Map<Integer, Palette> selectedPalettes = new HashMap<>();
     private static boolean isEnabled = true;
+    private static boolean isLargeMenu = true;
     private static boolean isInitialized = false;
 
     public PaletteManager(JsonObject json){
 
         isEnabled = json.get("isEnabled").getAsBoolean();
+        isLargeMenu = json.has("isLargeMenu") && json.get("isLargeMenu").getAsBoolean();
 
         JsonArray palettesJson = json.getAsJsonArray("palettes");
         for(JsonElement jsonPalette : palettesJson){
@@ -135,6 +137,14 @@ public class PaletteManager {
         isEnabled = enable;
     }
 
+    public static void toggleLayout(){
+        isLargeMenu = !isLargeMenu;
+    }
+
+    public static boolean isLargeMenu(){
+        return isLargeMenu;
+    }
+
     public static JsonObject toJson(){
         JsonObject json = new JsonObject();
         JsonArray jsonPalettes = new JsonArray(getBuilderPalettes().size());
@@ -156,6 +166,7 @@ public class PaletteManager {
         json.add("selectedPalettes", jsonSelectedPalettes);
 
         json.addProperty("isEnabled", isEnabled);
+        json.addProperty("isLargeMenu", isLargeMenu);
 
         return json;
     }
