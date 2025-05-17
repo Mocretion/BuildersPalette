@@ -15,6 +15,7 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.fabricmc.fabric.api.client.rendering.v1.HudLayerRegistrationCallback;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 import net.minecraft.client.KeyMapping;
@@ -130,7 +131,7 @@ public class BlockPalettesClient implements ClientModInitializer {
 
 		});
 
-		HudRenderCallback.EVENT.register(new HudRenderer()::renderHudAdditions);
+		HudLayerRegistrationCallback.EVENT.register(new HudRenderer()::renderHudAdditions);
 	}
 
 	private void onBlockPlaced(Player player) {
@@ -138,10 +139,10 @@ public class BlockPalettesClient implements ClientModInitializer {
 		if(!PaletteManager.getIsEnabled())
 			return;
 
-		if(!PaletteManager.getSelectedPalettes().containsKey(player.getInventory().selected + 1))
+		if(!PaletteManager.getSelectedPalettes().containsKey(player.getInventory().getSelectedSlot() + 1))
 			return;
 
-		PaletteManager.getSelectedPalettes().get(player.getInventory().selected + 1).getPaletteItemFromInventory(player);
+		PaletteManager.getSelectedPalettes().get(player.getInventory().getSelectedSlot() + 1).getPaletteItemFromInventory(player);
 	}
 
 	private void openPaletteListScreen(Minecraft client) {
