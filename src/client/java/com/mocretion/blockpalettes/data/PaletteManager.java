@@ -24,7 +24,11 @@ public class PaletteManager {
     public PaletteManager(JsonObject json){
 
         isEnabled = json.get("isEnabled").getAsBoolean();
-        isLargeMenu = json.has("isLargeMenu") && json.get("isLargeMenu").getAsBoolean();
+
+        if(!json.has("isLargeMenu"))
+            isLargeMenu = true;
+        else
+            isLargeMenu = json.get("isLargeMenu").getAsBoolean();
 
         JsonArray palettesJson = json.getAsJsonArray("palettes");
         for(JsonElement jsonPalette : palettesJson){
