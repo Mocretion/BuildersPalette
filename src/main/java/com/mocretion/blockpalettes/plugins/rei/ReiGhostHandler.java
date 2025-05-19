@@ -1,6 +1,5 @@
 package com.mocretion.blockpalettes.plugins.rei;
 
-import com.mocretion.blockpalettes.BlockPalettesClient;
 import com.mocretion.blockpalettes.gui.screens.PaletteEditScreen;
 import me.shedaniel.rei.api.client.gui.drag.DraggableStack;
 import me.shedaniel.rei.api.client.gui.drag.DraggableStackVisitor;
