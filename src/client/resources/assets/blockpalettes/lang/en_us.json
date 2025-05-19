@@ -30,7 +30,7 @@
   "container.blockpalettes.addWeight": "Add New Weight Category",
   "container.blockpalettes.deleteWeight": "Delete (Double-Click)",
   "container.blockpalettes.addItemToWeight": "To add an item, drag and drop it here",
-  "container.blockpalettes.addItemToWeightJEIInfo": "§7You can drag items from your inventory, or, if installed, §dE§aM§bI§2, JEI§2, or §fREI",
+  "container.blockpalettes.addItemToWeightJEIInfo": "§7You can drag items from your inventory, or, if installed, §dE§aM§bI§7, §2JEI§7, or §fREI",
 
 
   "container.blockpalettes.editPalette": "Edit Palette",
