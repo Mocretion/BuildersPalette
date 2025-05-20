@@ -83,7 +83,7 @@ neoForge {
         }
 
         data {
-            data()
+            clientData()
 
             // example of overriding the workingDirectory set in configureEach above, uncomment if you want to use it
             // gameDirectory = project.file('run-data')
@@ -132,8 +132,8 @@ configurations {
 dependencies {
     // Example optional mod dependency with JEI
     // The JEI API is declared for compile time use, while the full JEI artifact is used at runtime
-    compileOnly("mezz.jei:jei-${minecraft_version}-neoforge-api:${jei_version}")
-    compileOnly("dev.emi:emi-neoforge:${emi_version}:api")
+//    compileOnly("mezz.jei:jei-${minecraft_version}-neoforge-api:${jei_version}")
+  //  compileOnly("dev.emi:emi-neoforge:${emi_version}:api")
     compileOnly("me.shedaniel:RoughlyEnoughItems-api-neoforge:${rei_version}")  // REI
 
 

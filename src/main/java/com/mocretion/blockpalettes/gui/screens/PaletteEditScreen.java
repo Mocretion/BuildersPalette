@@ -14,6 +14,7 @@ import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.navigation.FocusNavigationEvent;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.MenuAccess;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -138,7 +139,7 @@ public class PaletteEditScreen extends AbstractContainerScreen<EditMenu> impleme
         super.renderBackground(context, mouseX, mouseY, delta);
 
         // Draw background
-        context.blit(BG_TEXTURE, leftPos, topPos, 0, 0, backgroundWidth, backgroundHeight);
+        context.blit(RenderType::guiTextured, BG_TEXTURE, leftPos, topPos, 0, 0, backgroundWidth, backgroundHeight, 256, 256);
     }
 
     @Override
@@ -183,14 +184,14 @@ public class PaletteEditScreen extends AbstractContainerScreen<EditMenu> impleme
         // Draw export hover
         if(isPointInRegion(leftPos + exportButtonMarginX, topPos + exportButtonMarginY, ButtonCatalogue.smallButtonSize, ButtonCatalogue.smallButtonSize, (int)mouseX, (int)mouseY)) {
             ButtonInfo texture = ButtonCatalogue.getExportHover();
-            context.blit(texture.identifier, leftPos + exportButtonMarginX, topPos + exportButtonMarginY, texture.u, texture.v, buttonSize, buttonSize);
+            context.blit(RenderType::guiTextured, texture.identifier, leftPos + exportButtonMarginX, topPos + exportButtonMarginY, texture.u, texture.v, buttonSize, buttonSize, 256, 256);
             context.renderComponentTooltip(this.font, Component.translatable("container.blockpalettes.exportPalette").toFlatList(), mouseX, mouseY);
         }
 
         final int scrollLevel = (int)scrollPosition;
 
         // Draw scroller
-        context.blit(SCROLLER_TEXTURE, leftPos + scrollMarginX, getCurrentScrollerYPosition(), 0, 0, scrollerWidth, scrollerHeight);
+        context.blit(RenderType::guiTextured, SCROLLER_TEXTURE, leftPos + scrollMarginX, getCurrentScrollerYPosition(), 0, 0, scrollerWidth, scrollerHeight, 256, 256);
 
         int xPos = leftPos + weightContainerStartWidth;
         boolean addedAddBtn = false;
@@ -201,7 +202,7 @@ public class PaletteEditScreen extends AbstractContainerScreen<EditMenu> impleme
 
             if(rowInfo.isBlank() && !addedAddBtn){  // Add new element
 
-                context.blit(ADD_WEIGHT_TEXTURE, xPos, yPos, 0, 0, weightItemsWidth, weightItemsHeight);
+                context.blit(RenderType::guiTextured, ADD_WEIGHT_TEXTURE, xPos, yPos, 0, 0, weightItemsWidth, weightItemsHeight, 256, 256);
 
                 if(isPointInRegion(xPos, yPos, weightItemsWidth, weightItemsHeight, (int) mouseX, (int) mouseY)) {
                     context.renderComponentTooltip(this.font, Component.translatable("container.blockpalettes.addWeight").toFlatList(), mouseX, mouseY);
@@ -211,7 +212,7 @@ public class PaletteEditScreen extends AbstractContainerScreen<EditMenu> impleme
 
             }else if(rowInfo.isWeightRow()){  // Add weight header
 
-                context.blit(TEXT_ROW_TEXTURE, xPos, yPos, 0, 0, weightItemsWidth, weightItemsHeight);
+                context.blit(RenderType::guiTextured, TEXT_ROW_TEXTURE, xPos, yPos, 0, 0, weightItemsWidth, weightItemsHeight, 256, 256);
 
                 String weightText = weights.get(rowInfo.weightCategoryId).getWeightInputField();
 
@@ -264,19 +265,19 @@ public class PaletteEditScreen extends AbstractContainerScreen<EditMenu> impleme
                 // Is hovering over delete
                 if(isPointInRegion(xPos + deleteButtonMarginX, yPos + deleteButtonMarginY, buttonSize, buttonSize, (int) mouseX, (int) mouseY)) {
                     ButtonInfo texture = ButtonCatalogue.getDeleteHover();
-                    context.blit(texture.identifier, xPos + deleteButtonMarginX, yPos + deleteButtonMarginY, texture.u, texture.v, buttonSize, buttonSize);
+                    context.blit(RenderType::guiTextured, texture.identifier, xPos + deleteButtonMarginX, yPos + deleteButtonMarginY, texture.u, texture.v, buttonSize, buttonSize, 256, 256);
                     context.renderComponentTooltip(this.font, Component.translatable("container.blockpalettes.deleteWeight").toFlatList(), mouseX, mouseY);
                 }
 
                 // Is selected as delete
                 if(this.deleteConfirm > 0 && this.toBeDeletedId == rowInfo.weightCategoryId){
                     ButtonInfo texture = ButtonCatalogue.getDeleteConfirm();
-                    context.blit(texture.identifier, xPos + deleteButtonMarginX, yPos + deleteButtonMarginY, texture.u, texture.v, buttonSize, buttonSize);
+                    context.blit(RenderType::guiTextured, texture.identifier, xPos + deleteButtonMarginX, yPos + deleteButtonMarginY, texture.u, texture.v, buttonSize, buttonSize, 256, 256);
                 }
 
             }else if(!rowInfo.isBlank()){  // Add inventory
 
-                context.blit(INVENTORY_ROW_TEXTURE, xPos, yPos, 0, 0, weightItemsWidth, weightItemsHeight);
+                context.blit(RenderType::guiTextured, INVENTORY_ROW_TEXTURE, xPos, yPos, 0, 0, weightItemsWidth, weightItemsHeight, 256, 256);
 
                 // Draw items
                 for (int itemNo = 0; itemNo < rowInfo.items.size(); itemNo++) {

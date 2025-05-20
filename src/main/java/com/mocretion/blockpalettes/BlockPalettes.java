@@ -150,10 +150,10 @@ public class BlockPalettes
             if(!PaletteManager.getIsEnabled())
                 return;
 
-            if(!PaletteManager.getSelectedPalettes().containsKey(player.getInventory().selected + 1))
+            if(!PaletteManager.getSelectedPalettes().containsKey(player.getInventory().getSelectedSlot() + 1))
                 return;
 
-            PaletteManager.getSelectedPalettes().get(player.getInventory().selected + 1).getPaletteItemFromInventory(player);
+            PaletteManager.getSelectedPalettes().get(player.getInventory().getSelectedSlot() + 1).getPaletteItemFromInventory(player);
         }
 
 

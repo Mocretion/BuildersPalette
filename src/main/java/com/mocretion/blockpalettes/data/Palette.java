@@ -172,10 +172,10 @@ public class Palette {
                 return;
             } else {
 
-                for (int i = 0; i < playerInv.items.size(); i++) {
+                for (int i = 0; i < playerInv.getNonEquipmentItems().size(); i++) {
 
                     int slot = i < 9 ? i + 36 : i;
-                    ItemStack playerStack = playerInv.items.get(i);
+                    ItemStack playerStack = playerInv.getNonEquipmentItems().get(i);
 
                     if (ItemStack.isSameItemSameComponents(playerStack, randomStack)) {
                         Minecraft.getInstance().gameMode.handleInventoryMouseClick(screenHandler.containerId, slot, hotbarSlot, ClickType.SWAP, player);

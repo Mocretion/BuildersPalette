@@ -7,8 +7,8 @@ import net.minecraft.CrashReportCategory;
 import net.minecraft.ReportedException;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.item.ItemStackRenderState;
 import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 
@@ -16,6 +16,7 @@ public class CustomDrawContext {
 
     private final GuiGraphics context;
     private final Minecraft client;
+    private final ItemStackRenderState scratchItemStackRenderState = new ItemStackRenderState();
 
     public CustomDrawContext(Minecraft client, GuiGraphics context) {
         this.client = client;
@@ -24,20 +25,18 @@ public class CustomDrawContext {
 
     public void drawItem(ItemStack stack, int x, int y, float scale){
         if (!stack.isEmpty()) {
-            BakedModel bakedModel = this.client.getItemRenderer().getModel(stack, this.client.level, this.client.player, 0);
+            client.getItemModelResolver().updateForTopItem(this.scratchItemStackRenderState, stack, ItemDisplayContext.GUI, client.level, null, 0);
             context.pose().pushPose();
             context.pose().translate((float)(x + 8), (float)(y + 8), (float)(150));
 
             try {
                 context.pose().scale(scale, -scale, scale);
-                boolean bl = !bakedModel.usesBlockLight();
+                boolean bl = !this.scratchItemStackRenderState.usesBlockLight();
                 if (bl) {
                     Lighting.setupForFlatItems();
                 }
 
-                this.client
-                        .getItemRenderer()
-                        .render(stack, ItemDisplayContext.GUI, false, context.pose(), context.bufferSource(), 15728880, OverlayTexture.NO_OVERLAY, bakedModel);
+                this.scratchItemStackRenderState.render(context.pose(), Minecraft.getInstance().renderBuffers().bufferSource(), 15728880, OverlayTexture.NO_OVERLAY);
                 context.flush();
                 if (bl) {
                     Lighting.setupFor3DItems();

@@ -8,6 +8,7 @@ import com.mocretion.blockpalettes.data.helper.SaveHelper;
 import com.mocretion.blockpalettes.gui.ButtonCatalogue;
 import com.mocretion.blockpalettes.gui.ButtonInfo;
 import com.mocretion.blockpalettes.gui.draw.CustomDrawContext;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 
 import net.minecraft.client.Minecraft;
@@ -126,7 +127,7 @@ public class PaletteListScreen extends Screen {
         super.renderBackground(context, mouseX, mouseY, delta);
 
         // Draw background
-        context.blit(BG_TEXTURE, leftPos, topPos, 0, 0, backgroundWidth, backgroundHeight);
+        context.blit(RenderType::guiTextured, BG_TEXTURE, leftPos, topPos, 0, 0, backgroundWidth, backgroundHeight, 256, 256);
     }
 
     @Override
@@ -141,7 +142,7 @@ public class PaletteListScreen extends Screen {
 
         // Draw scroller
         final int scrollLevel = (int)scrollPosition;
-        context.blit(SCROLLER_TEXTURE, leftPos + scrollMarginX, getCurrentScrollerYPosition(), 0, 0, scrollerWidth, scrollerHeight);
+        context.blit(RenderType::guiTextured, SCROLLER_TEXTURE, leftPos + scrollMarginX, getCurrentScrollerYPosition(), 0, 0, scrollerWidth, scrollerHeight, 256, 256);
 
         // Draw searchText
         String editedSearchText = searchText;
@@ -188,7 +189,7 @@ public class PaletteListScreen extends Screen {
             int yPos = topPos + paletteContainerStartHeight + slotNo * paletteItemHeight;
 
             if(paletteNo == palettes.size()){  // Add new element
-                context.blit(ADD_PALETTE_TEXTURE, xPos, yPos, 0, 0, paletteItemWidth, paletteItemHeight);
+                context.blit(RenderType::guiTextured, ADD_PALETTE_TEXTURE, xPos, yPos, 0, 0, paletteItemWidth, paletteItemHeight, 256, 256);
 
                 if(isPointInRegion(xPos, yPos, paletteItemWidth, paletteItemHeight, mouseX, mouseY)){
                     context.renderComponentTooltip(this.font, Component.translatable("container.blockpalettes.addPalette").toFlatList(), mouseX, mouseY);
@@ -196,7 +197,7 @@ public class PaletteListScreen extends Screen {
 
             }else if(paletteNo < palettes.size()){  // List existing element
                 Palette palette = palettes.get(paletteNo);
-                context.blit(PALETTE_PREVIEW_TEXTURE, xPos, yPos, 0, 0, paletteItemWidth, paletteItemHeight);
+                context.blit(RenderType::guiTextured, PALETTE_PREVIEW_TEXTURE, xPos, yPos, 0, 0, paletteItemWidth, paletteItemHeight, 256, 256);
 
                 customDrawContext.drawItem(palette.getIcon(), xPos + paletteItemIconMargin + 8, yPos + paletteItemIconMargin + 8, 32F);
 
@@ -234,16 +235,16 @@ public class PaletteListScreen extends Screen {
 
                 // Draw selected texture
                 if(PaletteManager.isPaletteSelected(palette)){
-                    context.blit(PALETTE_PREVIEW_TEXTURE, xPos, yPos, 0, paletteItemHeight * 2, paletteItemWidth, paletteItemHeight);
+                    context.blit(RenderType::guiTextured, PALETTE_PREVIEW_TEXTURE, xPos, yPos, 0, paletteItemHeight * 2, paletteItemWidth, paletteItemHeight, 256, 256);
 
                     if(!PaletteManager.getIsEnabled()){
-                        context.blit(PALETTE_PREVIEW_TEXTURE, xPos, yPos, 0, paletteItemHeight * 3, paletteItemWidth, paletteItemHeight);
+                        context.blit(RenderType::guiTextured, PALETTE_PREVIEW_TEXTURE, xPos, yPos, 0, paletteItemHeight * 3, paletteItemWidth, paletteItemHeight, 256, 256);
                     }
                 }
 
                 // Draw selected hotbar slot
                 ButtonInfo btnInfo = ButtonCatalogue.getSelectionButton(palette.getHotbarSlot() - 1);
-                context.blit(btnInfo.identifier, xPos + paletteHotbarMarginX + ButtonCatalogue.smallButtonSize * (palette.getHotbarSlot() - 1), yPos + paletteHotbarMarginY, btnInfo.u, btnInfo.v, ButtonCatalogue.smallButtonSize, ButtonCatalogue.smallButtonSize);
+                context.blit(RenderType::guiTextured, btnInfo.identifier, xPos + paletteHotbarMarginX + ButtonCatalogue.smallButtonSize * (palette.getHotbarSlot() - 1), yPos + paletteHotbarMarginY, btnInfo.u, btnInfo.v, ButtonCatalogue.smallButtonSize, ButtonCatalogue.smallButtonSize, 256, 256);
 
                 context.drawString(this.font, Component.literal(palette.getShortenedName(this.font, maxPaletteTitleWidth)),
                         xPos + paletteItemTitleMarginX,
@@ -265,7 +266,7 @@ public class PaletteListScreen extends Screen {
                 int xPos = leftPos + paletteContainerStartWidth + paletteSmallItemWidth * columnNo;
 
                 if (paletteNo == palettes.size()) {  // Add new element
-                    context.blit(ADD_PALETTE_TEXTURE, xPos, yPos, 202, 0, paletteSmallItemWidth, paletteItemHeight);
+                    context.blit(RenderType::guiTextured, ADD_PALETTE_TEXTURE, xPos, yPos, 202, 0, paletteSmallItemWidth, paletteItemHeight, 256, 256);
 
                     if (isPointInRegion(xPos, yPos, paletteSmallItemWidth, paletteItemHeight, mouseX, mouseY)) {
                         context.renderComponentTooltip(this.font, Component.translatable("container.blockpalettes.addPalette").toFlatList(), mouseX, mouseY);
@@ -273,7 +274,7 @@ public class PaletteListScreen extends Screen {
 
                 } else if (paletteNo < palettes.size()) {  // List existing element
                     Palette palette = palettes.get(paletteNo);
-                    context.blit(PALETTE_PREVIEW_TEXTURE, xPos, yPos, 202, 0, paletteSmallItemWidth, paletteItemHeight);
+                    context.blit(RenderType::guiTextured, PALETTE_PREVIEW_TEXTURE, xPos, yPos, 202, 0, paletteSmallItemWidth, paletteItemHeight, 256, 256);
 
                     // Draw icon
                     context.renderItem(palette.getIcon(), xPos + paletteSmallItemIconMargin, yPos + paletteSmallItemIconMargin);
@@ -298,16 +299,16 @@ public class PaletteListScreen extends Screen {
 
                     // Draw selected texture
                     if (PaletteManager.isPaletteSelected(palette)) {
-                        context.blit(PALETTE_PREVIEW_TEXTURE, xPos, yPos, 202, paletteItemHeight * 2, paletteSmallItemWidth, paletteItemHeight);
+                        context.blit(RenderType::guiTextured, PALETTE_PREVIEW_TEXTURE, xPos, yPos, 202, paletteItemHeight * 2, paletteSmallItemWidth, paletteItemHeight, 256, 256);
 
                         if (!PaletteManager.getIsEnabled()) {
-                            context.blit(PALETTE_PREVIEW_TEXTURE, xPos, yPos, 202, paletteItemHeight * 3, paletteSmallItemWidth, paletteItemHeight);
+                            context.blit(RenderType::guiTextured, PALETTE_PREVIEW_TEXTURE, xPos, yPos, 202, paletteItemHeight * 3, paletteSmallItemWidth, paletteItemHeight, 256, 256);
                         }
                     }
 
                     // Draw selected hotbar slot
                     ButtonInfo btnInfo = ButtonCatalogue.getSelectionButtonXs(palette.getHotbarSlot() - 1);
-                    context.blit(btnInfo.identifier, xPos + paletteSmallHotbarMarginX + ButtonCatalogue.xsButtonSize * ((palette.getHotbarSlot() - 1) % 3), yPos + paletteSmallHotbarMarginY + (palette.getHotbarSlot() - 1) / 3 * ButtonCatalogue.xsButtonSize, btnInfo.u, btnInfo.v, ButtonCatalogue.xsButtonSize, ButtonCatalogue.xsButtonSize);
+                    context.blit(RenderType::guiTextured, btnInfo.identifier, xPos + paletteSmallHotbarMarginX + ButtonCatalogue.xsButtonSize * ((palette.getHotbarSlot() - 1) % 3), yPos + paletteSmallHotbarMarginY + (palette.getHotbarSlot() - 1) / 3 * ButtonCatalogue.xsButtonSize, btnInfo.u, btnInfo.v, ButtonCatalogue.xsButtonSize, ButtonCatalogue.xsButtonSize, 256, 256);
 
                     context.drawString(this.font, Component.literal(palette.getShortenedName(this.font, maxPaletteSmallTitleWidth)),
                             xPos + paletteSmallItemTitleMarginX,
@@ -322,22 +323,22 @@ public class PaletteListScreen extends Screen {
 
     private void renderEditHoverButton(GuiGraphics context, int mouseX, int mouseY, int posXEdit, int posYEdit, int posXBg, int posYBg){
         ButtonInfo btnInfo = ButtonCatalogue.getEditHover();
-        context.blit(btnInfo.identifier, posXEdit, posYEdit, btnInfo.u, btnInfo.v, ButtonCatalogue.smallButtonSize, ButtonCatalogue.smallButtonSize);
-        context.blit(PALETTE_PREVIEW_TEXTURE, posXBg, posYBg, PaletteManager.isLargeMenu() ? 0 : 202, paletteItemHeight, PaletteManager.isLargeMenu() ? paletteItemWidth : paletteSmallItemWidth, paletteItemHeight);
+        context.blit(RenderType::guiTextured, btnInfo.identifier, posXEdit, posYEdit, btnInfo.u, btnInfo.v, ButtonCatalogue.smallButtonSize, ButtonCatalogue.smallButtonSize, 256, 256);
+        context.blit(RenderType::guiTextured, PALETTE_PREVIEW_TEXTURE, posXBg, posYBg, PaletteManager.isLargeMenu() ? 0 : 202, paletteItemHeight, PaletteManager.isLargeMenu() ? paletteItemWidth : paletteSmallItemWidth, paletteItemHeight, 256, 256);
         context.renderComponentTooltip(this.font, Component.translatable("container.blockpalettes.editPalette").toFlatList(), mouseX, mouseY);
     }
 
     private void renderDeleteConfirmButton(GuiGraphics context, int mouseX, int mouseY, int posXDel, int posYDel, int posXBg, int posYBg){
         ButtonInfo btnInfo = ButtonCatalogue.getDeleteConfirm();
-        context.blit(btnInfo.identifier, posXDel, posYDel + 1, btnInfo.u, btnInfo.v, ButtonCatalogue.smallButtonSize, ButtonCatalogue.smallButtonSize);
-        context.blit(PALETTE_PREVIEW_TEXTURE, posXBg, posYBg, PaletteManager.isLargeMenu() ? 0 : 202, paletteItemHeight, PaletteManager.isLargeMenu() ? paletteItemWidth : paletteSmallItemWidth, paletteItemHeight);
+        context.blit(RenderType::guiTextured, btnInfo.identifier, posXDel, posYDel + 1, btnInfo.u, btnInfo.v, ButtonCatalogue.smallButtonSize, ButtonCatalogue.smallButtonSize, 256, 256);
+        context.blit(RenderType::guiTextured, PALETTE_PREVIEW_TEXTURE, posXBg, posYBg, PaletteManager.isLargeMenu() ? 0 : 202, paletteItemHeight, PaletteManager.isLargeMenu() ? paletteItemWidth : paletteSmallItemWidth, paletteItemHeight, 256, 256);
         context.renderComponentTooltip(this.font, Component.translatable("container.blockpalettes.deletePalette").toFlatList(), mouseX, mouseY);
     }
 
     public void renderDeleteHoverButton(GuiGraphics context, int mouseX, int mouseY, int posXDel, int posYDel, int posXBg, int posYBg){
         ButtonInfo btnInfo = ButtonCatalogue.getDeleteHover();
-        context.blit(btnInfo.identifier, posXDel, posYDel, btnInfo.u, btnInfo.v, ButtonCatalogue.smallButtonSize, ButtonCatalogue.smallButtonSize);
-        context.blit(PALETTE_PREVIEW_TEXTURE, posXBg, posYBg, PaletteManager.isLargeMenu() ? 0 : 202, paletteItemHeight, PaletteManager.isLargeMenu() ? paletteItemWidth : paletteSmallItemWidth, paletteItemHeight);
+        context.blit(RenderType::guiTextured, btnInfo.identifier, posXDel, posYDel, btnInfo.u, btnInfo.v, ButtonCatalogue.smallButtonSize, ButtonCatalogue.smallButtonSize, 256, 256);
+        context.blit(RenderType::guiTextured, PALETTE_PREVIEW_TEXTURE, posXBg, posYBg, PaletteManager.isLargeMenu() ? 0 : 202, paletteItemHeight, PaletteManager.isLargeMenu() ? paletteItemWidth : paletteSmallItemWidth, paletteItemHeight, 256, 256);
         context.renderComponentTooltip(this.font, Component.translatable("container.blockpalettes.deletePalette").toFlatList(), mouseX, mouseY);
     }
 
@@ -346,7 +347,7 @@ public class PaletteListScreen extends Screen {
     }
 
     public void renderPaletteHoverButton(GuiGraphics context, int mouseX, int mouseY, int posXBg, int posYBg, Palette palette){
-        context.blit(PALETTE_PREVIEW_TEXTURE, posXBg, posYBg, PaletteManager.isLargeMenu() ? 0 : 202, paletteItemHeight, PaletteManager.isLargeMenu() ? paletteItemWidth : paletteSmallItemWidth, paletteItemHeight);
+        context.blit(RenderType::guiTextured, PALETTE_PREVIEW_TEXTURE, posXBg, posYBg, PaletteManager.isLargeMenu() ? 0 : 202, paletteItemHeight, PaletteManager.isLargeMenu() ? paletteItemWidth : paletteSmallItemWidth, paletteItemHeight, 256, 256);
 
         List<FormattedCharSequence> paletteNameTooltip = new ArrayList<>();
         paletteNameTooltip.add(Component.literal(palette.getName()).getVisualOrderText());
@@ -356,7 +357,7 @@ public class PaletteListScreen extends Screen {
 
     private void renderToggleHoverButton(GuiGraphics context, int mouseX, int mouseY){
         ButtonInfo btnInfo = ButtonCatalogue.getTogglePalettesHover();
-        context.blit(btnInfo.identifier, leftPos + paletteToggleEnabledMarginX, topPos + paletteButtonMarginY, btnInfo.u, btnInfo.v, ButtonCatalogue.smallButtonSize, ButtonCatalogue.smallButtonSize);
+        context.blit(RenderType::guiTextured, btnInfo.identifier, leftPos + paletteToggleEnabledMarginX, topPos + paletteButtonMarginY, btnInfo.u, btnInfo.v, ButtonCatalogue.smallButtonSize, ButtonCatalogue.smallButtonSize, 256, 256);
 
         List<FormattedCharSequence> togglePaletteTooltip = new ArrayList<>();
         togglePaletteTooltip.add(Component.translatable("container.blockpalettes.togglePalettes").getVisualOrderText());
@@ -368,13 +369,13 @@ public class PaletteListScreen extends Screen {
 
     private void renderDeselectAllHoverButton(GuiGraphics context, int mouseX, int mouseY){
         ButtonInfo btnInfo = ButtonCatalogue.getDeselectAllHover();
-        context.blit(btnInfo.identifier, leftPos + paletteDeselectAllMarginX, topPos + paletteButtonMarginY, btnInfo.u, btnInfo.v, ButtonCatalogue.smallButtonSize, ButtonCatalogue.smallButtonSize);
+        context.blit(RenderType::guiTextured, btnInfo.identifier, leftPos + paletteDeselectAllMarginX, topPos + paletteButtonMarginY, btnInfo.u, btnInfo.v, ButtonCatalogue.smallButtonSize, ButtonCatalogue.smallButtonSize, 256, 256);
         context.renderComponentTooltip(this.font, Component.translatable("container.blockpalettes.deselectPalettes").toFlatList(), mouseX, mouseY);
     }
 
     private void renderImportHoverButton(GuiGraphics context, int mouseX, int mouseY){
         ButtonInfo btnInfo = ButtonCatalogue.getImportHover();
-        context.blit(btnInfo.identifier, leftPos + paletteImportMarginX, topPos + paletteButtonMarginY, btnInfo.u, btnInfo.v, ButtonCatalogue.smallButtonSize, ButtonCatalogue.smallButtonSize);
+        context.blit(RenderType::guiTextured, btnInfo.identifier, leftPos + paletteImportMarginX, topPos + paletteButtonMarginY, btnInfo.u, btnInfo.v, ButtonCatalogue.smallButtonSize, ButtonCatalogue.smallButtonSize, 256, 256);
         context.renderComponentTooltip(this.font, Component.translatable("container.blockpalettes.importPalette").toFlatList(), mouseX, mouseY);
     }
 
@@ -389,7 +390,7 @@ public class PaletteListScreen extends Screen {
 
     private void renderLayoutToggleButton(GuiGraphics context, int mouseX, int mouseY){
         ButtonInfo btnInfo = ButtonCatalogue.getToggleLayoutHover();
-        context.blit(btnInfo.identifier, leftPos + paletteChangeLayoutMarginX, topPos + paletteChangeLayoutMarginY, btnInfo.u, btnInfo.v, ButtonCatalogue.xsButtonSize, ButtonCatalogue.xsButtonSize);
+        context.blit(RenderType::guiTextured, btnInfo.identifier, leftPos + paletteChangeLayoutMarginX, topPos + paletteChangeLayoutMarginY, btnInfo.u, btnInfo.v, ButtonCatalogue.xsButtonSize, ButtonCatalogue.xsButtonSize, 256, 256);
         context.renderComponentTooltip(this.font, Component.translatable("container.blockpalettes.toggleLayout").toFlatList(), mouseX, mouseY);
     }
 

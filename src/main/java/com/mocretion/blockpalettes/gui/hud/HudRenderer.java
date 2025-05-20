@@ -7,6 +7,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.RenderType;
 
 public class HudRenderer{
 
@@ -29,14 +30,9 @@ public class HudRenderer{
         int x = (screenWidth - HOTBARR_WIDTH) / 2;
         int y = screenHeight - HOOTBAR_HEIGHT;
 
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
-
         for(int enabledSlot : PaletteManager.getSelectedPalettes().keySet()){
             ButtonInfo hudElement = ButtonCatalogue.getHotbarActivePalette(enabledSlot -1);
-            context.blit(hudElement.identifier, x + 20 * (enabledSlot - 1), y, hudElement.u, hudElement.v, OVERLAY_Width, OVERLAY_HEIGHT);
+            context.blit(RenderType::guiTextured, hudElement.identifier, x + 20 * (enabledSlot - 1), y, hudElement.u, hudElement.v, OVERLAY_Width, OVERLAY_HEIGHT, 256, 256);
         }
-
-        RenderSystem.disableBlend();
     }
 }
